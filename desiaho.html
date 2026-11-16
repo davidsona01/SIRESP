@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a0f1e">
+<meta name="description" content="Inspección y gestión de tanques atmosféricos. Funciona con y sin conexión a internet.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DESIAHO">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>DESIAHO – Sistema Integral de Riesgos</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0f1e;--bg2:#0f172a;--row2:#1a2740;--surf:#1e293b;--bord:#334155;--bord2:#475569;--mut:#64748b;--sub:#94a3b8;--tx2:#e2e8f0;--tx1:#f1f5f9}
+body.light{--bg:#f1f5f9;--bg2:#e2e8f0;--row2:#f8fafc;--surf:#ffffff;--bord:#cbd5e1;--bord2:#94a3b8;--mut:#64748b;--sub:#475569;--tx2:#334155;--tx1:#0f172a}
+body{background:var(--bg);color:var(--tx2);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
+#app{min-height:100vh}
+input,textarea,button{font-family:inherit}
+::placeholder{color:var(--bord2)}
+.c{max-width:600px;margin:0 auto;padding:16px}
+.cw{max-width:1100px;margin:0 auto;padding:16px}
+.bc{background:var(--surf)}.r{border-radius:14px}.p{padding:16px}.p12{padding:12px}.p14{padding:14px}
+.f{display:flex}.fc{flex-direction:column}.fw{flex-wrap:wrap}.ac{align-items:center}.js{justify-content:space-between}
+.f1{flex:1}.g{display:grid}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+.tc{text-align:center}.ts{font-size:11px;color:var(--mut)}
+.f9{font-weight:900}.f8{font-weight:800}.f7{font-weight:700}.lh{line-height:1}
+.mb4{margin-bottom:4px}.mb6{margin-bottom:6px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
+.mt6{margin-top:6px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.gap{gap:12px}.gap-sm{gap:8px}
+.btn{background:var(--surf);border:2px solid var(--bord);border-radius:12px;color:var(--sub);cursor:pointer;font-size:14px;font-weight:700;padding:12px 18px;transition:all .15s}
+.btn-pry{background:#f59e0b;border:none;color:#0a0f1e;font-weight:900;border-radius:14px;padding:16px;font-size:16px;cursor:pointer;width:100%}
+.btn-suc{background:#22c55e;border:none;color:#0a0f1e;font-weight:900;border-radius:14px;padding:16px;font-size:16px;cursor:pointer;width:100%}
+.btn-pry:disabled,.btn-suc:disabled{background:var(--bord);color:var(--mut);cursor:not-allowed}
+.btn-ghost{background:transparent;border:1px solid var(--bord);border-radius:10px;color:var(--mut);cursor:pointer;padding:7px 14px;font-size:13px}
+.badge{border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700}
+.badge-sm{border-radius:8px;padding:1px 6px;font-size:9px;font-weight:700}
+input,textarea{background:var(--bg2);border:2px solid var(--bord);border-radius:10px;color:var(--tx1);font-size:14px;padding:12px;width:100%;outline:none;transition:border .2s}
+input:focus,textarea:focus{border-color:#3b82f6}
+textarea{resize:none}
+.hero{background:linear-gradient(135deg,var(--surf),var(--bg2));border-bottom:1px solid var(--bord);padding:22px 20px 16px;text-align:center}
+.hero-icon{font-size:50px;margin-bottom:8px}
+.hero-sub{font-size:10px;color:var(--bord2);letter-spacing:3px}
+.hero-title{font-size:26px;font-weight:900;color:var(--tx1)}
+.hero-desc{font-size:13px;color:var(--mut);margin-top:4px}
+.stb{background:var(--surf);border-radius:12px;padding:14px 10px;text-align:center;border:1px solid var(--bord)}
+.stb-n{font-size:26px;font-weight:900;line-height:1}
+.stb-l{font-size:10px;color:var(--mut);margin-top:3px}
+.mbtn{background:var(--surf);border:2px solid var(--bord);border-radius:16px;cursor:pointer;padding:18px 14px;text-align:center;width:100%}
+.mbtn-ic{font-size:30px;margin-bottom:7px}
+.mbtn-t{font-size:14px;font-weight:800}
+.mbtn-d{font-size:11px;color:var(--mut);margin-top:3px}
+.pin-d{width:13px;height:13px;border-radius:50%;background:var(--bord);transition:background .2s}
+.pin-d.f{background:#3b82f6}.pin-d.fa{background:#f59e0b}
+.pin-b{background:#1e3a5f;border:none;border-radius:12px;color:#fff;cursor:pointer;font-size:17px;font-weight:700;padding:14px}
+.pin-b:active{opacity:.7}.pin-b.e{background:transparent;cursor:default}
+.ch{background:var(--bg2);padding:12px 16px;flex-shrink:0}
+.cp-h{height:5px;background:var(--surf);border-radius:3px;overflow:hidden;flex:1}
+.cp-b{height:100%;border-radius:3px;transition:width .3s}
+.cc{background:var(--surf);border-radius:18px;padding:18px;border:2px solid var(--bord);display:flex;flex-direction:column;overflow:auto;transition:all .12s;flex:1}
+.co{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.co button{padding:16px 8px;border-radius:12px;border:3px solid;font-size:14px;font-weight:900;cursor:pointer;transition:all .15s}
+.cn{display:flex;gap:8px;margin-top:8px}
+.cn button{flex:1;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
+.th{background:var(--bg2);border-bottom:1px solid var(--surf);padding:12px 16px;flex-wrap:wrap}
+.tl{background:var(--surf);padding:9px 16px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--bg2)}
+.sc{border-radius:14px;margin-bottom:12px;overflow:hidden}
+.sh{background:var(--bg2);padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.sp{height:4px;background:var(--bord)}
+.sp-b{height:100%;transition:width .4s}
+.ah{background:var(--bg2);border-bottom:1px solid var(--surf);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.at{font-size:9px;color:var(--bord2);font-weight:700;letter-spacing:1px;display:grid;gap:5px;padding:6px 16px;background:var(--bg2)}
+.ar{display:grid;gap:5px;padding:11px 16px;cursor:pointer;border-bottom:1px solid var(--bg2);align-items:center}
+.ar:nth-child(even){background:var(--row2)}.ar:nth-child(odd){background:var(--surf)}
+.ab{background:var(--surf);border-bottom:1px solid var(--bord);padding:10px 20px}
+.mc{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.mc-b{background:var(--surf);border-radius:16px;padding:24px;width:100%;max-width:440px;border:1px solid var(--bord)}
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#22c55e;color:#0a0f1e;padding:11px 20px;border-radius:12px;font-weight:800;font-size:13px;z-index:3000;box-shadow:0 4px 24px #22c55e44;max-width:90vw;text-align:center;transition:opacity .3s;opacity:0;pointer-events:none}
+#toast.show{opacity:1;pointer-events:auto}
+.netpill{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:.5px;background:#22c55e22;border:1px solid #22c55e44;color:#22c55e}
+.netpill.off{background:#f59e0b22;border-color:#f59e0b44;color:#f59e0b}
+.netdot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.installbtn{margin-top:10px}
+.pg{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pg-i{position:relative}
+.pg-i img{width:60px;height:60px;object-fit:cover;border-radius:8px;border:2px solid var(--bord)}
+.pg-d{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pg-a{width:60px;height:60px;border-radius:8px;border:2px dashed var(--bord2);background:var(--bg2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0}
+.tec-item{padding:12px 16px;border-bottom:1px solid var(--bg2)}
+.tec-item:nth-child(even){background:var(--row2)}
+.tec-item:nth-child(odd){background:var(--surf)}
+canvas.chart{width:100%;height:100%;display:block}
+.ct{width:100%;height:160px;position:relative}
+.ld{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:8px}
+.ld-ic{font-size:48px}.ld-l{color:#f59e0b;font-size:14px;font-weight:700}
+@media(max-width:480px){.tl{gap:6px}.g2{grid-template-columns:1fr}.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div id="app"></div>
+<script>
+// DESIAHO v1.0 - Sistema Integral de Riesgos
+const QD=[
+["1.1","Base / Fundación",1,"⬡","¿La base o fundación presenta asentamientos diferenciales?","Preventiva",3,"Asentamiento diferencial puede fracturar la soldadura de fondo generando derrame masivo."],
+["1.2a","Base / Fundación",1,"⬡","¿El Dique o Muro de Contención está íntegro y sin fugas?","Mitigación",3,"Sin dique íntegro un derrame alcanza fuentes de ignición y cuerpos de agua."],
+["1.2b","Base / Fundación",1,"⬡","¿El fondo del tanque muestra corrosión, picaduras o fugas?","Mitigación",3,"Causa #1 de pérdida de contención en tanques atmosféricos (API 653)."],
+["2.1","Cuerpo del Tanque",2,"◯","¿El casco presenta corrosión, grietas o fugas visibles?","Preventiva",3,"Fuga de crudo con riesgo de incendio y contaminación ambiental."],
+["2.2","Cuerpo del Tanque",2,"◯","¿El recubrimiento anticorrosivo está en condiciones aceptables?","Preventiva",3,"Sin recubrimiento la tasa de corrosión se acelera."],
+["2.3","Cuerpo del Tanque",2,"◯","¿Las escotillas de inspección permiten un cierre hermético?","Preventiva",9,"Emisión de vapores inflamables — riesgo de explosión."],
+["2.4","Cuerpo del Tanque",2,"◯","¿Están en buen estado las Empacaduras de las Bocas de Visita?","Preventiva",3,"Fuga de vapores por sellos defectuosos."],
+["2.5","Cuerpo del Tanque",2,"◯","¿Están completos los Espárragos de la Boca de Visita?","Preventiva",3,"Sello incompleto genera emisión continua de vapores."],
+["2.6","Cuerpo del Tanque",2,"◯","¿Está en buen estado la Boca de Limpieza?","Preventiva",3,"Boca deteriorada impide acceso seguro para limpieza interna."],
+["2.7","Cuerpo del Tanque",2,"◯","¿Están en buen estado las Empacaduras de la Boca de Limpieza?","Preventiva",3,"Fuga activa de producto durante limpieza interna."],
+["2.8","Cuerpo del Tanque",2,"◯","¿Están completos los Espárragos de la Boca de Limpieza?","Preventiva",3,"Sello incompleto en boca de limpieza."],
+["2.9","Cuerpo del Tanque",2,"◯","¿La línea de Carga/Descarga muestra corrosión, picaduras o fugas?","Preventiva",3,"Fuga en línea de proceso: derrame y riesgo inmediato de incendio."],
+["2.10","Cuerpo del Tanque",2,"◯","¿Las válvulas en la Tubería de Carga/Descarga están operativas?","Preventiva",3,"Válvulas inoperativas impiden aislamiento en emergencia."],
+["2.11","Cuerpo del Tanque",2,"◯","¿Tubería Sistema de Agua Efluente muestra corrosión o fugas?","Preventiva",3,"Fuga de agua contaminada con hidrocarburos al ambiente."],
+["2.12","Cuerpo del Tanque",2,"◯","¿Las válvulas en la tubería de Aguas Efluentes están operativas?","Preventiva",3,"Sin control de efluentes existe riesgo ambiental continuo."],
+["2.13","Cuerpo del Tanque",2,"◯","¿Dispone de Tubería Sistema de Telemetría y Aforo?","Preventiva",9,"Sin aforo no se detecta sobrellenado a tiempo (API 2350)."],
+["2.14","Cuerpo del Tanque",2,"◯","¿Dispone Tubería de Control de Nivel Automático (Radar)?","Preventiva",9,"Sin control automático el riesgo de sobrellenado es crítico."],
+["2.15","Cuerpo del Tanque",2,"◯","¿El sistema de drenaje pluvial funciona correctamente?","Preventiva",3,"Acumulación de agua en dique dificulta respuesta de emergencia."],
+["3.1","Accesorios",3,"⚙","¿Los instrumentos de medición de nivel funcionan correctamente?","Preventiva",3,"Sin nivel confiable: riesgo de sobrellenado o vaciado excesivo."],
+["3.2","Accesorios",3,"⚙","¿Los instrumentos de medición de temperatura funcionan correctamente?","Preventiva",3,"Operación fuera de rango con expansión del producto."],
+["3.3","Accesorios",3,"⚙","¿Los instrumentos de medición de sedimento funcionan correctamente?","Preventiva",3,"Obstrucción de venteos y líneas."],
+["3.4","Accesorios",3,"⚙","¿Los instrumentos de medición de presión funcionan correctamente?","Preventiva",3,"Sin presión confiable no se detecta sobrepresión antes del evento."],
+["3.5","Accesorios",3,"⚙","¿Los instrumentos de medición de agua funcionan correctamente?","Preventiva",3,"Acumulación de agua libre favorece corrosión de fondo."],
+["3.6","Accesorios",3,"⚙","¿Las alarmas de sobrellenado y seguridad están probadas y operativas?","Preventiva",3,"Sin alarma funcional: sobrellenado no se detecta a tiempo."],
+["3.7","Accesorios",3,"⚙","¿La Escalera Exterior está en buen estado sin corrosión?","Preventiva",3,"Caída de altura durante inspección o emergencia."],
+["3.8","Accesorios",3,"⚙","¿La Cornisa/Caminera Externa Superior no presenta corrosión?","Preventiva",3,"Colapso de caminera con posibles fatalidades."],
+["3.9","Accesorios",3,"⚙","¿La Baranda o Pasa Manos está en buen estado sin corrosión?","Preventiva",3,"Caída al vacío durante inspección."],
+["4.1","Techo Cónico",4,"△","¿El techo cónico presenta corrosión generalizada o localizada?","Preventiva",3,"Fuga de vapores e ingreso de agua al producto."],
+["4.2","Techo Cónico",4,"△","¿Las uniones soldadas entre techo y casco están en buen estado?","Preventiva",3,"Colapso o emisión masiva de vapores."],
+["4.3","Techo Cónico",4,"△","¿Se observa acumulación de agua o producto sobre el techo?","Preventiva",3,"Carga estática excesiva puede colapsar el techo."],
+["4.4","Techo Cónico",4,"△","¿Está en buen estado la Escalera de acceso interno?","Preventiva",3,"Caída durante trabajo en espacio confinado."],
+["5.1","Contra Incendio",5,"🔥","¿El sistema de espuma fija/móvil está disponible y en condiciones?","Mitigación",3,"Sin espuma: incendio incontrolable, BLEVE potencial."],
+["5.2","Contra Incendio",5,"🔥","¿Las cámaras de espuma están libres de corrosión y bloqueos?","Mitigación",3,"Cámara bloqueada: espuma no llega al techo en emergencia."],
+["5.3","Contra Incendio",5,"🔥","¿Las válvulas de diluvio responden a pruebas funcionales?","Mitigación",3,"Válvula bloqueada: enfriamiento no actúa en incendio."],
+["5.4","Contra Incendio",5,"🔥","¿Se realizan pruebas periódicas de descarga de espuma?","Preventiva",9,"Sin pruebas el sistema puede fallar en la única emergencia real."],
+["5.5","Contra Incendio",5,"🔥","¿Las líneas de espuma tienen válvulas de retención en buen estado?","Mitigación",3,"Reflujo de producto hacia el sistema de espuma."],
+["5.6","Contra Incendio",5,"🔥","¿Existen planes de mantenimiento documentados para el SCI?","Preventiva",3,"Sin plan documentado: mantenimiento reactivo."],
+["5.7","Contra Incendio",5,"🔥","¿Está en buen estado la Tubería SCI de Enfriamiento de pared externa?","Mitigación",3,"Sin enfriamiento la pared falla ante exposición al fuego."],
+["5.8","Contra Incendio",5,"🔥","¿Están pintadas y en buen estado las Válvulas de Enfriamiento?","Mitigación",3,"Válvula corroída no opera en emergencia."],
+["5.9","Contra Incendio",5,"🔥","¿En el exterior del tanque está visible su capacidad?","Preventiva",9,"Sin rotulación la brigada no sabe el volumen a enfrentar."],
+["5.10","Contra Incendio",5,"🔥","¿Las bombas CI tienen pruebas de arranque y caudal documentadas?","Preventiva",3,"Bomba sin pruebas puede no arrancar en emergencia."],
+["5.11","Contra Incendio",5,"🔥","¿Existen planes de emergencia y brigadas entrenadas?","Mitigación",3,"Sin entrenamiento la respuesta al incendio es caótica."],
+["5.12","Contra Incendio",5,"🔥","¿Se realizan simulacros periódicos de emergencia?","Preventiva",3,"Sin simulacros los tiempos de respuesta son impredecibles."],
+["5.13","Contra Incendio",5,"🔥","¿Las bombas y líneas de agua CI mantienen presión adecuada?","Mitigación",3,"Sin presión suficiente el alcance del agua es insuficiente."],
+["5.14","Contra Incendio",5,"🔥","¿Los hidrantes cercanos al tanque están accesibles y operativos?","Mitigación",3,"Hidrante inaccesible = tiempo crítico perdido en emergencia."],
+["6.1","Sistema de Venteo",6,"↑","¿El sistema de ventilación está operativo?","Preventiva",3,"Acumulación de vapores inflamables en espacio vapor."],
+["6.2","Sistema de Venteo",6,"↑","¿El disipador con rejillas y válvulas de venteo está operativo?","Preventiva",3,"Venteo bloqueado: sobrepresión o implosión del tanque."],
+["6.3","Sistema de Venteo",6,"↑","¿Las válvulas de alivio de presión/vacío están calibradas y operativas?","Preventiva",3,"PVRV inoperativa: colapso por vacío o ruptura por sobrepresión."],
+["7.1","Puesta a Tierra",7,"⚡","¿Están en buen estado las Barras Copperweld?","Preventiva",3,"Chispa estática puede ignitar vapores inflamables."],
+["7.2","Puesta a Tierra",7,"⚡","¿Los sistemas de puesta a tierra están en buen estado?","Preventiva",3,"Acumulación de carga estática: fuente de ignición."],
+["7.3","Puesta a Tierra",7,"⚡","¿Están en buen estado los cables y conductores de tierra?","Preventiva",3,"Cable cortado: el sistema de tierra no cumple su función."],
+["7.4","Puesta a Tierra",7,"⚡","¿La integridad de conexiones entre tanque y tuberías es correcta?","Preventiva",3,"Diferencia de potencial entre equipos genera chispa."],
+["8.1","Protección Catódica",8,"⊕","¿Está íntegro el cableado de la protección catódica?","Preventiva",3,"Corrosión acelerada en fondo del tanque."],
+["8.2","Protección Catódica",8,"⊕","¿La protección catódica (si aplica) está operativa?","Preventiva",3,"Fondo sin protección electroquímica activa."],
+["8.3","Protección Catódica",8,"⊕","¿Están en buen estado los cables y conductores del sistema?","Preventiva",3,"Cableado dañado: sistema catódico no protege el fondo."],
+["8.4","Protección Catódica",8,"⊕","¿Están en buen estado las Conexiones de ánodos?","Preventiva",3,"Ánodo desconectado: corrosión localizada bajo el tanque."],
+["9.1","Detección F&G",9,"🚨","¿El sistema de monitoreo de incendios (sensores calor/humo) está operativo?","Preventiva",3,"Incendio avanzado antes del primer aviso."],
+["9.2","Detección F&G",9,"🚨","¿Los detectores de humo y gas están limpios y sin obstrucciones?","Preventiva",3,"Detector sucio no activa la alarma en el momento crítico."],
+["9.3","Detección F&G",9,"🚨","¿Las alarmas, luces de advertencia y cableado están en buen estado?","Preventiva",3,"Sin alarma audible: el personal no evacúa a tiempo."],
+["10.1","Protección Física",10,"🛡","¿Las luminarias están operativas según clasificación de área?","Preventiva",3,"Accidentes nocturnos y uso de equipos no certificados Ex."],
+["10.2","Protección Física",10,"🛡","¿Los equipos de Detección de Intrusos están operativos?","Preventiva",9,"Sabotaje o acceso no autorizado al área de tanques."],
+["10.3","Protección Física",10,"🛡","¿El acceso para brigadas CI está despejado alrededor del tanque?","Preventiva",3,"Brigada no puede rodear el tanque en emergencia."],
+["10.4","Protección Física",10,"🛡","¿Está garantizado el acceso para mantenimiento y limpieza?","Preventiva",3,"Maleza o bloqueos dificultan inspección visual del casco."]
+];
+// Expand compact data
+const QUESTIONS=QD.map(([id,sec,sid,icon,text,barrier,weight,risk])=>({id,sec,sid,icon,text,barrier,weight,risk}));
+const SECS=[...new Map(QUESTIONS.map(q=>[q.sid,{sid:q.sid,sec:q.sec,icon:q.icon}])).values()];
+const SC={1:"#f59e0b",2:"#3b82f6",3:"#8b5cf6",4:"#06b6d4",5:"#ef4444",6:"#10b981",7:"#f97316",8:"#84cc16",9:"#ec4899",10:"var(--mut)"};
+const OBS=["Corrosión laminar","Corrosión localizada/picaduras","Fuga activa de producto","Fuga de vapores","Válvula sin rotular","Válvula inoperativa/trabada","Empacadura deteriorada","Espárrago faltante/corroído","Recubrimiento descascarado","Acceso bloqueado","Sin calibración vigente","Sin prueba funcional documentada","Estructura con deformación","Cable dañado/expuesto","Requiere limpieza"];
+const DT=[{id:"TK-001",instalacion:"Batería Norte",producto:"Crudo 18° API",capacidad:10000,custodio:"Ing. R. Salazar"},{id:"TK-002",instalacion:"Batería Norte",producto:"Crudo 22° API",capacidad:8000,custodio:"Ing. R. Salazar"},{id:"TK-003",instalacion:"Batería Sur",producto:"Crudo 15° API",capacidad:15000,custodio:"Ing. P. Méndez"},{id:"TK-004",instalacion:"Batería Sur",producto:"Agua de Formación",capacidad:5000,custodio:"Ing. P. Méndez"},{id:"TK-005",instalacion:"Planta Central",producto:"Crudo 20° API",capacidad:20000,custodio:"Ing. L. Gutiérrez"}];
+const PINS={inspector:"1234",admin:"9999"};
+// Utils
+function sq(s,w,b){if(!s||s==="N/A")return{s:0,m:0};const f=b==="Preventiva"?0.7:0.3;const m=w*f;return{s:m*(s==="C"?1:s==="CP"?0.5:0),m};}
+function calc(ans){let s=0,m=0;QUESTIONS.forEach(q=>{const r=sq(ans[q.id],q.weight,q.barrier);s+=r.s;m+=r.m;});return m>0?Math.round((s/m)*100):0;}
+function lv(sc){if(sc>=90)return{l:"EXCELENTE",c:"#22c55e",a:"Mantener est\u00e1ndar."};if(sc>=75)return{l:"MUY BUENO",c:"#84cc16",a:"Mejora continua."};if(sc>=60)return{l:"A NIVEL",c:"#f59e0b",a:"Plan 6 meses."};if(sc>=45)return{l:"BAJO",c:"#f97316",a:"Intervenci\u00f3n 90 d\u00edas."};if(sc>=30)return{l:"MUY BAJO",c:"#ef4444",a:"Intervenci\u00f3n inmediata."};return{l:"DEFICIENTE",c:"#dc2626",a:"DETENER SERVICIO."};}
+function ds(d){return d?Math.floor((Date.now()-new Date(d))/864e5):null;}
+// State
+const S={page:"loading",auth:null,role:null,pin:"",pinErr:false,tanks:[],inspections:[],toastTimer:null,recording:false,recognition:null,
+campo:{phase:"sel",tankId:null,auditor:"",idx:0,answers:{},notes:{},photos:{},showRisk:false,showTpl:false,saving:false,touchX:null,anim:null,camReady:false},
+tecnico:{phase:"sel",tankId:null,auditor:"",fecha:"",answers:{},notes:{},saving:false,open:{1:true}},
+admin:{view:"ov",selTank:null,selInsp:null,addTank:false,filt:"Todas",newTank:{id:"",instalacion:"",producto:"",capacidad:"",custodio:""}}};
+S.installable=false;S.deferredPrompt=null;
+window.addEventListener("online",function(){var p=document.getElementById("netpill");if(p){p.className="netpill";p.innerHTML='<span class="netdot"></span>ONLINE';}showToast("Conexión restablecida. Los datos se guardan en este dispositivo.","#22c55e");});
+window.addEventListener("offline",function(){var p=document.getElementById("netpill");if(p){p.className="netpill off";p.innerHTML='<span class="netdot"></span>OFFLINE';}showToast("Sin conexión. DESIAHO sigue funcionando con los datos guardados.","#f59e0b");});
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();S.deferredPrompt=e;S.installable=true;if(S.page==="home")render();});
+window.addEventListener("appinstalled",function(){S.installable=false;S.deferredPrompt=null;showToast("DESIAHO instalado. Funciona con y sin conexión.","#22c55e");render();});
+function promptInstall(){if(!S.deferredPrompt)return;S.deferredPrompt.prompt();S.deferredPrompt.userChoice.then(function(){S.deferredPrompt=null;S.installable=false;render();});}
+// Storage
+function loadData(){try{const t=localStorage.getItem("desiaho-tanks");S.tanks=t?JSON.parse(t):DT.map(t=>({...t}));const i=localStorage.getItem("desiaho-insps");S.inspections=i?JSON.parse(i):[];}catch(e){S.tanks=DT.map(t=>({...t}));S.inspections=[];}}
+function saveTanksToLS(){try{localStorage.setItem("desiaho-tanks",JSON.stringify(S.tanks));}catch(e){}}
+function saveInspToLS(insp){try{S.inspections.push(insp);localStorage.setItem("desiaho-insps",JSON.stringify(S.inspections));}catch(e){}}
+function showToast(msg,clr){const t=document.getElementById("toast");if(!t)return;t.style.background=clr||"#22c55e";t.style.color=(clr&&clr!=="#22c55e")?"white":"#0a0f1e";t.textContent=msg;t.classList.add("show");clearTimeout(S.toastTimer);S.toastTimer=setTimeout(()=>t.classList.remove("show"),4000);}
+function go(pg){S.page=pg;render();}
+function toggleTheme(){S.light=!S.light;applyTheme();try{localStorage.setItem("desiaho-light",S.light?"1":"0");}catch(e){}render();}
+function applyTheme(){if(document.body)document.body.classList.toggle("light",!!S.light);}
+// Charts
+function drawTrendChart(canvasId,data,color){
+  const c=document.getElementById(canvasId);if(!c||!data||data.length<2)return;
+  const rect=c.parentElement.getBoundingClientRect();
+  c.width=rect.width*2;c.height=rect.height*2;
+  const ctx=c.getContext("2d");const w=c.width,h=c.height,pr=2;
+  const P={t:20*pr,r:15*pr,b:35*pr,l:45*pr};
+  const cw=w-P.l-P.r,ch=h-P.t-P.b;
+  ctx.clearRect(0,0,w,h);
+  const vals=data.map(d=>d.score||0);const mx=100,mn=0;
+  ctx.strokeStyle="#1e293b";ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=P.t+(ch-((i/4)*ch));ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(w-P.r,y);ctx.stroke();ctx.fillStyle="#475569";ctx.font=(10*pr)+"px sans-serif";ctx.textAlign="right";ctx.fillText(Math.round(mx-(i/4)*(mx-mn))+"%",P.l-6*pr,y+4*pr);}
+  ctx.fillStyle="#475569";ctx.font=(9*pr)+"px sans-serif";ctx.textAlign="center";
+  vals.forEach((_,i)=>{const x=P.l+(i/(vals.length-1))*cw;const lbl=data[i].f?data[i].f.slice(0,5):"";ctx.fillText(lbl,x,h-P.b+16*pr);});
+  ctx.strokeStyle=color;ctx.lineWidth=3*pr;ctx.lineJoin="round";ctx.lineCap="round";ctx.beginPath();
+  vals.forEach((v,i)=>{const x=P.l+(i/(vals.length-1))*cw;const y=P.t+ch-((v-mn)/(mx-mn))*ch;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+  vals.forEach((v,i)=>{const x=P.l+(i/(vals.length-1))*cw;const y=P.t+ch-((v-mn)/(mx-mn))*ch;ctx.beginPath();ctx.arc(x,y,4*pr,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.strokeStyle="#0a0f1e";ctx.lineWidth=2*pr;ctx.stroke();});
+}
+function drawPieChart(canvasId,data){
+  const c=document.getElementById(canvasId);if(!c)return;
+  const rect=c.parentElement.getBoundingClientRect();c.width=rect.width*2;c.height=rect.height*2;
+  const ctx=c.getContext("2d");const w=c.width,h=c.height,pr=2;
+  ctx.clearRect(0,0,w,h);
+  if(!data||!data.length){ctx.fillStyle="#475569";ctx.font=(11*pr)+"px sans-serif";ctx.textAlign="center";ctx.fillText("Sin datos de inspecci\u00f3n",w/2,h/2);return;}
+  const cx=w/2,cy=h/2-10*pr,rad=Math.min(w/2,h/2)-20*pr;
+  const total=data.reduce((a,d)=>a+d.value,0);if(!total){ctx.fillStyle="#475569";ctx.font=(11*pr)+"px sans-serif";ctx.textAlign="center";ctx.fillText("Sin datos de inspecci\u00f3n",w/2,h/2);return;}
+  let ang=-Math.PI/2;
+  data.forEach(d=>{const sl=(d.value/total)*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,rad,ang,ang+sl);ctx.closePath();ctx.fillStyle=d.color;ctx.fill();const ma=ang+sl/2;ctx.fillStyle="#94a3b8";ctx.font=(11*pr)+"px sans-serif";ctx.textAlign="center";if(d.value>0)ctx.fillText(d.name.slice(0,4)+" "+d.value,cx+Math.cos(ma)*(rad+15*pr),cy+Math.sin(ma)*(rad+15*pr)+4*pr);ang+=sl;});
+}
+function drawBarChart(canvasId,data,color){
+  const c=document.getElementById(canvasId);if(!c||!data||!data.length)return;
+  const rect=c.parentElement.getBoundingClientRect();c.width=rect.width*2;c.height=rect.height*2;
+  const ctx=c.getContext("2d");const w=c.width,h=c.height,pr=2;
+  const P={t:10*pr,r:15*pr,b:25*pr,l:80*pr};const cw=w-P.l-P.r,ch=h-P.t-P.b;
+  ctx.clearRect(0,0,w,h);const mx=Math.max(...data.map(d=>d.v),1);const bh=Math.min(26*pr,(ch-8*pr)/data.length);const gap=4*pr;
+  if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);this.closePath();return this;};}
+  data.forEach((d,i)=>{const bw=(d.v/mx)*cw;const y=P.t+i*(bh+gap);ctx.fillStyle="#334155";ctx.beginPath();ctx.roundRect(P.l,y,cw,bh,4*pr);ctx.fill();ctx.fillStyle=color||"#ef4444";ctx.beginPath();ctx.roundRect(P.l,y,bw,bh,[0,4*pr,4*pr,0]);ctx.fill();ctx.fillStyle="#94a3b8";ctx.font=(9*pr)+"px sans-serif";ctx.textAlign="right";ctx.fillText(d.name,P.l-6*pr,y+bh/2+3*pr);if(bw>40*pr){ctx.fillStyle="#fff";ctx.font=(9*pr)+"px sans-serif";ctx.textAlign="left";ctx.fillText(d.v,P.l+6*pr,y+bh/2+3*pr);}});
+}
+// Render
+function render(){
+  const app=document.getElementById("app");if(!app)return;
+  switch(S.page){
+    case"loading":app.innerHTML=renderLoading();break;
+    case"home":app.innerHTML=renderHome();break;
+    case"login":app.innerHTML=renderLogin();break;
+    case"campo-sel":app.innerHTML=renderCampoSel();break;
+    case"campo-form":app.innerHTML=renderCampoForm();break;
+    case"campo-sum":app.innerHTML=renderCampoSum();break;
+    case"tecnico-sel":app.innerHTML=renderTecnicoSel();break;
+    case"tecnico-form":app.innerHTML=renderTecnicoForm();break;
+    case"admin":app.innerHTML=renderAdmin();break;
+    case"tank-detail":app.innerHTML=renderTankDetail();break;
+    default:app.innerHTML=renderHome();
+  }
+  setTimeout(()=>{if(S.page==="admin"){renderAdminCharts();}if(S.page==="tank-detail"){renderTankCharts();}},50);
+}
+function renderLoading(){return"<div class=\"ld\"><div class=\"ld-ic\">?</div><div class=\"ld-l\">Cargando DESIAHO\u2026</div></div>";}
+// Home
+function renderHome(){
+  const t=S.tanks.length,i=S.inspections.length,c=i?S.inspections.filter(x=>x.score<60).length:0;
+  return '<div><div class="hero" style="position:relative"><button class="btn-ghost" style="position:absolute;top:12px;right:12px;font-size:11px;font-weight:700" onclick="toggleTheme()">'+(S.light?'\uD83C\uDF19 Oscuro':'\u2600\uFE0F Claro')+'</button>'+
+    '<div class="netpill'+(navigator.onLine?"":" off")+'"><span class="netdot"></span>'+(navigator.onLine?"ONLINE":"OFFLINE")+'</div>'+
+    (S.installable?'<button class="btn btn-suc installbtn" style="width:100%;padding:12px;font-size:13px" onclick="promptInstall()">⬇ Instalar DESIAHO en este dispositivo</button>':'')+'<div class="hero-icon">?</div><div class="hero-sub">SISTEMA INTEGRAL DE RIESGOS \u2014 SEGURIDAD DE LOS PROCESOS</div><div class="hero-title">DESIAHO</div><div class="hero-desc">Inspecci\u00f3n y Gesti\u00f3n de Tanques Atmosf\u00e9ricos \u00b7 Techo C\u00f3nico</div></div><div class="c"><div class="g g3 gap-sm mb16">'+
+    '<div class="stb"><div class="stb-n" style="color:#3b82f6">'+t+'</div><div class="stb-l">Tanques en Flota</div></div>'+
+    '<div class="stb"><div class="stb-n" style="color:#f59e0b">'+i+'</div><div class="stb-l">Inspecciones</div></div>'+
+    '<div class="stb"><div class="stb-n" style="color:#ef4444">'+c+'</div><div class="stb-l">Cr\u00edticos</div></div></div>'+
+    (!S.auth||S.auth==="inspector"?renderHomeModules():"")+
+    renderHomeAdmin()+
+    (S.auth?'<button class="btn" style="width:100%;margin-bottom:16px" onclick="logout()">Cerrar sesi\u00f3n ('+S.auth+')</button>':'')+
+    (i>0?renderHomeLast():'')+
+    '<div class="tc mt16" style="font-size:10px;color:var(--bord)">DESIAHO v1.0 \u00b7 API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div></div></div>';
+}
+function renderHomeModules(){
+  return '<div class="mb16"><div class="f ac gap-sm mb8"><span style="font-size:11px;color:var(--mut);font-weight:700;letter-spacing:1px">\uD83D\uDC77 M\u00d3DULOS DE INSPECCI\u00d3N</span>'+(S.auth==="inspector"?'<span class="badge-sm" style="background:#22c55e22;color:#22c55e">\u25cf Sesi\u00f3n activa</span>':'')+'</div><div class="g g2 gap">'+
+    '<button class="mbtn" style="border-color:#f59e0b44" onclick="reqAuth(\'campo\')"><div class="mbtn-ic">\u26a1</div><div class="mbtn-t" style="color:#f59e0b">Campo R\u00e1pido</div><div class="mbtn-d">Una pregunta \u00b7 C\u00e1mara \u00b7 Voz</div></button>'+
+    '<button class="mbtn" style="border-color:#3b82f644" onclick="reqAuth(\'tecnico\')"><div class="mbtn-ic">\uD83D\uDCCB</div><div class="mbtn-t" style="color:#3b82f6">Panel T\u00e9cnico</div><div class="mbtn-d">Formulario completo \u00b7 55 \u00edtems</div></button></div></div>';
+}
+function renderHomeAdmin(){
+  return '<div class="mb16"><div class="f ac gap-sm mb8"><span style="font-size:11px;color:var(--mut);font-weight:700;letter-spacing:1px">\uD83C\uDFD7 ADMINISTRACI\u00d3N</span>'+(S.auth==="admin"?'<span class="badge-sm" style="background:#f59e0b22;color:#f59e0b">\u25cf Sesi\u00f3n activa</span>':'')+'</div>'+
+    '<button class="mbtn" style="border-color:#f59e0b44" onclick="reqAuth(\'admin\')"><div class="f ac gap" style="justify-content:center"><span style="font-size:30px">\uD83C\uDFD7</span><div style="text-align:left"><div class="mbtn-t" style="color:#f59e0b">Panel Administrador</div><div class="mbtn-d">Dashboard \u00b7 KPIs \u00b7 Historial \u00b7 Tendencias \u00b7 NC Tracker</div></div></div></button></div>';
+}
+function renderHomeLast(){
+  let h='<div class="bc r p16"><div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:10px">\u00daLTIMAS INSPECCIONES GUARDADAS</div>';
+  [...S.inspections].reverse().slice(0,5).forEach(insp=>{const l=lv(insp.score);h+='<div class="f gap ac" style="padding:8px 0;border-bottom:1px solid var(--bg2)"><div class="f1"><div style="font-size:13px;font-weight:700;color:var(--tx1)">'+insp.tag+'</div><div style="font-size:10px;color:var(--mut)">'+insp.fecha+' \u00b7 '+insp.auditor+' \u00b7 '+(insp.modulo||"")+'</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:900;color:'+l.c+'">'+insp.score+'%</div><div style="font-size:9px;color:#ef4444;font-weight:700">'+insp.nc+' NC</div></div></div>';});
+  return h+'</div>';
+}
+function reqAuth(mod){
+  if(!S.auth){S.role=(mod==="admin"?"admin":"inspector");go("login");}
+  else if(S.auth==="inspector"&&(mod==="campo"||mod==="tecnico")){go(mod==="campo"?"campo-sel":"tecnico-sel");}
+  else if(S.auth==="admin"&&mod==="admin"){go("admin");}
+  else{S.role=(mod==="admin"?"admin":"inspector");S.auth=null;S.pin="";go("login");}
+}
+function logout(){S.auth=null;S.role=null;S.pin="";S.pinErr=false;go("home");}
+// Login
+function renderLogin(){
+  const r=S.role;const dots=[0,1,2,3].map(i=>"<div class=\"pin-d"+(S.pin.length>i?" f"+(r==="admin"?"a":""):"")+"\"></div>").join("");
+  return '<div class="c" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px"><div style="width:100%;max-width:320px;text-align:center"><div style="font-size:44px;margin-bottom:12px">'+(r==="admin"?"\uD83C\uDFD7":"\uD83D\uDC77")+'</div><div style="font-size:19px;font-weight:900;color:var(--tx1);margin-bottom:4px">'+(r==="admin"?"Administrador":"Inspector")+'</div><div style="font-size:12px;color:var(--mut);margin-bottom:26px">Ingresa tu PIN de acceso</div><div class="bc r p16" style="border:1px solid '+(S.pinErr?"#ef4444":"var(--bord)")+'">'+
+    '<div class="f" style="justify-content:center;gap:12px;margin-bottom:18px">'+dots+'</div><div class="g3" style="gap:9px">'+
+    [1,2,3,4,5,6,7,8,9,"",0,"\u232b"].map(k=>{
+      if(k==="")return"<div></div>";
+      if(k==="\u232b")return'<button class="pin-b" style="background:'+(S.pinErr?"#ef444433":r==="admin"?"var(--bord)":"#1e3a5f")+';font-size:15px" onclick="pinBackspace()">\u232b</button>';
+      return'<button class="pin-b" style="background:'+(S.pinErr?"#ef444433":r==="admin"?"var(--bord)":"#1e3a5f")+'" onclick="pinDigit('+k+')">'+k+'</button>';
+    }).join("")+
+    '</div><div style="margin-top:11px;font-size:11px;color:var(--bord2)">PIN demo: '+(r==="inspector"?"1234":"9999")+'</div></div>'+
+    '<button class="btn-ghost mt12" onclick="go(\'home\')">\u2190 Volver</button></div></div>';
+}
+function pinDigit(d){if(S.pin.length>=4)return;S.pin+=String(d);S.pinErr=false;if(S.pin.length===4)checkPin();else render();}
+function pinBackspace(){S.pin=S.pin.slice(0,-1);S.pinErr=false;render();}
+function checkPin(){
+  const r=S.role;
+  if(S.pin===PINS[r]){S.auth=r;S.pin="";
+    if(r==="admin")go("admin");else go("home");
+  }else{S.pinErr=true;setTimeout(()=>{S.pin="";S.pinErr=false;render();},600);render();}
+}
+// Campo Rapido
+function renderCampoSel(){
+  const c=S.campo;const tank=S.tanks.find(t=>t.id===c.tankId);
+  return '<div class="c"><div class="f ac gap-sm mb16"><button class="btn-ghost" onclick="go(\'home\')" style="font-size:16px">\u2190</button><div><div style="font-size:18px;font-weight:900;color:var(--tx1)">\u26a1 Campo R\u00e1pido</div><div style="font-size:12px;color:var(--mut)">Selecciona el tanque</div></div></div>'+
+    S.tanks.map(t=>'<div class="bc r p14 mb8" style="border:2px solid '+(t.id===c.tankId?"#3b82f6":"var(--bord)")+';cursor:pointer" onclick="campoPickTank(\''+t.id+'\')"><div class="f js ac"><div><div style="font-size:15px;font-weight:800;color:var(--tx1)">'+t.id+'</div><div style="font-size:11px;color:var(--mut)">'+t.instalacion+' \u00b7 '+t.producto+'</div></div><div style="font-size:12px;color:var(--mut)">'+(t.capacidad||0).toLocaleString()+' m\u00b3</div></div></div>').join("")+
+    '<div class="mt16 mb8"><div style="font-size:12px;color:var(--sub);margin-bottom:5px;font-weight:700">NOMBRE DEL INSPECTOR</div><input type="text" id="campo-aud" placeholder="Ing. Nombre Apellido" value="'+c.auditor+'" oninput="S.campo.auditor=this.value"></div>'+
+    '<button class="btn-pry mt8" onclick="campoStart()">INICIAR \u2192</button></div>';
+}
+function campoPickTank(id){S.campo.tankId=id;render();}
+function campoStart(){
+  const c=S.campo;if(!c.tankId||!c.auditor.trim()){showToast("Selecciona tanque e ingresa tu nombre.","#f59e0b");return;}
+  c.idx=0;c.answers={};c.notes={};c.photos={};c.showRisk=false;c.showTpl=false;go("campo-form");
+}
+function renderCampoForm(){
+  const c=S.campo;const q=QUESTIONS[c.idx];if(!q)return go("campo-sum");
+  const cur=c.answers[q.id];const score=calc(c.answers);const lv2=lv(score);
+  const tank=S.tanks.find(t=>t.id===c.tankId);const totalQ=QUESTIONS.length;
+  const pct=Math.round(((c.idx+1)/totalQ)*100);const nv=c.notes[q.id]||"";
+  const ph=c.photos[q.id]||[];
+  const hasNote=cur==="NC"||cur==="CP"||nv;
+  const opts=[["C","\u2714 CONFORME","#22c55e"],["CP","\u26a1 PARCIAL","#f59e0b"],["NC","\u2715 NO CONFORME","#ef4444"],["N/A","\u2014 NO APLICA","var(--mut)"]];
+  return '<div style="display:flex;flex-direction:column;min-height:100vh"><div class="ch"><div class="f ac js mb8">'+
+    '<button class="btn-ghost" onclick="campoBackToSel()" style="font-size:13px">\u2190 Cambiar</button>'+
+    '<div class="tc"><div style="font-size:11px;color:var(--bord2)">'+q.icon+' '+q.sec+'</div><div style="font-size:11px;color:'+SC[q.sid]+';font-weight:700">'+(tank?tank.id:"")+'</div></div>'+
+    '<button class="btn-ghost" style="background:'+lv2.c+'22;border:1px solid '+lv2.c+'44;color:'+lv2.c+';font-weight:900;font-size:14px" onclick="go(\'campo-sum\')">'+score+'%</button></div>'+
+    '<div class="f ac gap-sm"><div class="cp-h"><div class="cp-b" style="width:'+pct+'%;background:'+SC[q.sid]+'"></div></div><span style="font-size:11px;color:var(--mut);font-weight:700;flex-shrink:0">'+(c.idx+1)+'/'+totalQ+'</span></div></div>'+
+    '<div class="f1 fc" style="padding:14px;overflow:hidden"><div class="cc" style="border-color:'+(cur==="C"?"#22c55e":cur==="CP"?"#f59e0b":cur==="NC"?"#ef4444":SC[q.sid]+"44")+'" id="campo-card">'+
+    '<div class="f gap-sm fw mb12"><span class="badge" style="background:'+SC[q.sid]+'22;color:'+SC[q.sid]+'">'+q.icon+' '+q.sec+'</span><span class="badge" style="background:'+(q.barrier==="Preventiva"?"#1d4ed822":"#7c3aed22")+';color:'+(q.barrier==="Preventiva"?"#60a5fa":"#c084fc")+'">'+q.barrier+' \u00b7 P'+q.weight+'</span></div>'+
+    '<div class="f1" style="font-size:19px;font-weight:800;color:var(--tx1);line-height:1.4;margin-bottom:14px"><span style="color:var(--bord2);font-size:14px;margin-right:6px">'+q.id+'</span>'+q.text+'</div>'+
+    '<button class="btn-ghost" style="text-align:left;margin-bottom:8px;display:flex;gap:8px;align-items:center;width:100%;background:'+(c.showRisk?"var(--bg2)":"transparent")+';border-color:'+(c.showRisk?"#f59e0b":"var(--bord)")+'" onclick="toggleCampoRisk()"><span>\u26a0\ufe0f</span><span class="f1">'+(c.showRisk?q.risk:"Ver riesgo asociado")+'</span></button>'+
+    (hasNote?renderCampoNotes(q.id,nv,ph,c):'<div class="mt6"><button class="btn-ghost" style="padding:5px 12px;font-size:11px" onclick="enableCampoNotes()">\uD83D\uDCDD Agregar observaci\u00f3n</button></div>')+
+    '</div><div class="co">'+opts.map(([val,label,cl])=>'<button style="background:'+(cur===val?cl:"var(--surf)")+';border-color:'+(cur===val?cl:cl+"44")+';color:'+(cur===val?(val==="N/A"?"white":"#0a0f1e"):"var(--sub)")+';box-shadow:'+(cur===val?"0 0 20px "+cl+"44":"none")+'" onclick="campoPick(\''+q.id+'\',\''+val+'\')">'+label+'</button>').join("")+
+    '</div><div class="cn"><button style="background:'+(c.idx===0?"var(--surf)":"var(--bord)")+';color:'+(c.idx===0?"var(--bord)":"var(--sub)")+';cursor:'+(c.idx===0?"not-allowed":"pointer")+'" onclick="campoNav(-1)" '+(c.idx===0?"disabled":"")+'>\u2190 Ant.</button>'+
+    (c.idx===totalQ-1?'<button style="flex:2;background:#f59e0b;color:#0a0f1e;font-weight:900" onclick="go(\'campo-sum\')">VER RESUMEN \u2192</button>':'<button style="flex:2;background:var(--bord);color:var(--tx2)" onclick="campoNav(1)">Siguiente \u2192</button>')+
+    '</div><div class="tc mt6" style="font-size:10px;color:var(--bord)">\u2190 desliza para navegar \u2192</div></div></div>';
+}
+function renderCampoNotes(qid,nv,ph,c){
+  let h='<div class="mt6"><div class="f ac gap-sm mb6"><span style="font-size:11px;color:var(--mut);font-weight:700">\uD83D\uDCDD OBSERVACI\u00d3N</span>'+
+    '<button class="btn-ghost" style="padding:5px 10px;font-size:11px;background:'+(S.recording?"#ef4444":"var(--bord)")+';color:'+(S.recording?"white":"var(--sub)")+'" onclick="toggleVoice()">'+(S.recording?"\u23f9 Stop":"\uD83C\uDFA4 Voz")+'</button></div>'+
+    '<textarea rows="2" placeholder="Escribe o dicta la observaci\u00f3n..." oninput="updateCampoNote(\''+qid+'\',this.value)" style="width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:10px;padding:10px;color:var(--tx2);font-size:13px;resize:none;box-sizing:border-box">'+nv+'</textarea>'+
+    '<button class="btn-ghost" style="font-size:11px;padding:2px 0;text-decoration:underline;border:none;background:none" onclick="togCampoTpl()">'+(c.showTpl?"Ocultar plantillas":"+ Plantillas r\u00e1pidas")+'</button>'+
+    (c.showTpl?'<div class="f fw" style="gap:4px;margin-top:4px">'+OBS.map(t=>'<button class="btn-ghost" style="padding:4px 8px;font-size:10px;background:var(--bg2);border-color:var(--bord)" onclick=\'addCampoNote("'+qid+'",'+JSON.stringify(t)+')\'>'+t+'</button>').join("")+'</div>':'')+
+    '<div class="pg">'+ph.map((p,i)=>'<div class="pg-i"><img src="'+p+'"><button class="pg-d" onclick="delCampoPhoto('+i+')">x</button></div>').join("")+
+    '<button class="pg-a" onclick="addCampoPhoto()"><span style="font-size:20px">\uD83D\uDCF7</span><span style="font-size:9px;color:var(--mut)">Foto</span></button></div>'+
+    '<input type="file" id="campo-cam" accept="image/*" capture="environment" style="display:none" onchange="handleCampoPhoto(event)"></div>';
+  return h;
+}
+function updateCampoNote(qid,v){S.campo.notes[qid]=v;}
+function enableCampoNotes(){const q=QUESTIONS[S.campo.idx];if(!q)return;S.campo.notes[q.id]=S.campo.notes[q.id]||"";render();}
+function toggleCampoRisk(){S.campo.showRisk=!S.campo.showRisk;render();}
+function togCampoTpl(){S.campo.showTpl=!S.campo.showTpl;render();}
+function addCampoNote(qid,txt){S.campo.notes[qid]=(S.campo.notes[qid]||"")+(S.campo.notes[qid]?" \u00b7 ":"")+txt;S.campo.showTpl=false;render();}
+function addCampoPhoto(){const el=document.getElementById("campo-cam");if(el)el.click();}
+function handleCampoPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const q=QUESTIONS[S.campo.idx];if(!q)return;S.campo.photos[q.id]=(S.campo.photos[q.id]||[]).concat(ev.target.result);render();};r.readAsDataURL(f);e.target.value="";}
+function delCampoPhoto(i){const q=QUESTIONS[S.campo.idx];if(!q)return;S.campo.photos[q.id]=(S.campo.photos[q.id]||[]).filter((_,j)=>j!==i);render();}
+function campoPick(qid,val){S.campo.answers[qid]=S.campo.answers[qid]===val?null:val;if(val==="C"&&S.campo.idx<QUESTIONS.length-1)setTimeout(()=>campoNav(1),350);render();}
+function campoNav(dir){const c=S.campo;const nx=c.idx+dir;if(nx<0||nx>=QUESTIONS.length)return;c.anim=dir>0?"l":"r";render();setTimeout(()=>{c.idx=nx;c.anim=null;c.showRisk=false;c.showTpl=false;S.recording=false;render();},120);}
+function campoBackToSel(){S.recording=false;if(S.recognition){try{S.recognition.stop();}catch(e){}S.recognition=null;}go("campo-sel");}
+function toggleVoice(){
+  if(S.recording){if(S.recognition){try{S.recognition.stop();}catch(e){}S.recognition=null;}S.recording=false;render();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast("Usa Chrome en Android para voz.","#f59e0b");return;}
+  const r=new SR();r.lang="es-ES";r.continuous=false;r.interimResults=false;
+  const q=QUESTIONS[S.campo.idx];
+  r.onresult=e=>{S.campo.notes[q.id]=(S.campo.notes[q.id]||"")+" "+e.results[0][0].transcript;S.recording=false;render();};
+  r.onerror=()=>{S.recording=false;render();};r.onend=()=>{S.recording=false;render();};
+  S.recognition=r;r.start();S.recording=true;render();
+}
+function renderCampoSum(){
+  const c=S.campo;const tank=S.tanks.find(t=>t.id===c.tankId);const score=calc(c.answers);const lv2=lv(score);
+  const nc=Object.values(c.answers).filter(v=>v==="NC").length;
+  const cp=Object.values(c.answers).filter(v=>v==="CP").length;
+  const cCount=Object.values(c.answers).filter(v=>v==="C").length;
+  const total=QUESTIONS.length;const pend=total-Object.keys(c.answers).length;
+  const secData=SECS.map(s=>{let t=0,m=0;QUESTIONS.filter(q=>q.sid===s.sid).forEach(q=>{const r=sq(c.answers[q.id],q.weight,q.barrier);t+=r.s;m+=r.m;});return{...s,pct:m>0?Math.round((t/m)*100):0};});
+  const ncs=QUESTIONS.filter(q=>c.answers[q.id]==="NC");
+  return '<div class="c"><div class="f ac gap-sm mb16"><button class="btn-ghost" onclick="go(\'campo-form\')" style="font-size:16px">\u2190</button><div><div style="font-size:17px;font-weight:800;color:var(--tx1)">Resumen \u2014 '+(tank?tank.id:"")+'</div><div style="font-size:11px;color:var(--mut)">Inspector: '+c.auditor+'</div></div></div>'+
+    '<div class="bc r p16 tc mb12" style="border:3px solid '+lv2.c+'44"><div style="font-size:60px;font-weight:900;color:'+lv2.c+';line-height:1">'+score+'<span style="font-size:26px">%</span></div><div style="font-size:15px;font-weight:800;color:'+lv2.c+';margin-top:4px">'+lv2.l+'</div>'+
+    '<div class="f" style="justify-content:center;gap:20px;margin-top:12px">'+
+    [[cCount,"C","#22c55e"],[cp,"CP","#f59e0b"],[nc,"NC","#ef4444"],[pend,"Pend.","var(--mut)"]].map(([v,l,cl])=>"<div class=\"tc\"><div style=\"font-size:26px;font-weight:900;color:"+cl+"\">"+v+"</div><div style=\"font-size:10px;color:var(--mut)\">"+l+"</div></div>").join("")+
+    '</div></div>'+
+    secData.map(s=>{const lv3=lv(s.pct);return'<div class="f ac gap-sm bc r p12 mb6" style="border:1px solid '+SC[s.sid]+'33;cursor:pointer" onclick="campoJumpToSec('+s.sid+')"><span style="font-size:17px">'+s.icon+'</span><div class="f1"><div style="font-size:12px;font-weight:700;color:var(--tx1)">'+s.sec+'</div><div style="height:4px;background:var(--bg2);border-radius:3px;margin-top:3px"><div style="width:'+s.pct+'%;height:100%;background:'+lv3.c+';border-radius:3px"></div></div></div><div style="font-size:17px;font-weight:900;color:'+lv3.c+';flex-shrink:0">'+s.pct+'%</div></div>';}).join("")+
+    ncs.map(q=>'<div class="bc r p12 mb6" style="border-left:3px solid #ef4444;background:var(--bg2)"><div style="font-size:10px;color:var(--mut);margin-bottom:2px">'+q.id+' \u00b7 '+q.sec+'</div><div style="font-size:12px;color:var(--tx1)">'+q.text+'</div>'+(c.notes[q.id]?'<div style="font-size:11px;color:#f59e0b;margin-top:3px">\uD83D\uDCDD '+c.notes[q.id]+'</div>':"")+'</div>').join("")+
+    '<button class="btn-suc mt6" onclick="campoSave()" id="campo-save-btn">\u2714 GUARDAR EN SISTEMA</button>'+
+    '<button class="btn mt6" style="background:#1e3a5f;color:white;border:none;width:100%;padding:12px;font-weight:700;font-size:14px;cursor:pointer" onclick="printCampoReport()">\uD83D\uDCC4 IMPRIMIR REPORTE PDVSA</button>'+
+    '<button class="btn-ghost" style="width:100%;padding:12px;margin-top:8px;text-align:center" onclick="go(\'campo-form\')">\u2190 Volver al Campo</button></div>';
+}
+function campoJumpToSec(sid){const fi=QUESTIONS.findIndex(q=>q.sid===sid);if(fi>=0){S.campo.idx=fi;go("campo-form");}}
+function campoSave(){
+  const c=S.campo;const tank=S.tanks.find(t=>t.id===c.tankId);
+  if(!tank||!c.auditor.trim()){showToast("Datos incompletos.","#ef4444");return;}
+  const btn=document.getElementById("campo-save-btn");if(btn){btn.disabled=true;btn.textContent="Guardando\u2026";}
+  const score=calc(c.answers);const lv2=lv(score);
+  const nc=Object.values(c.answers).filter(v=>v==="NC").length;
+  const cp=Object.values(c.answers).filter(v=>v==="CP").length;
+  const hallazgos=QUESTIONS.filter(q=>c.answers[q.id]==="NC"||c.answers[q.id]==="CP").map(q=>({sec:q.sec,id:q.id,txt:c.notes[q.id]||q.text.slice(0,50)+"\u2026",tipo:c.answers[q.id],fotos:(c.photos[q.id]||[]).length}));
+  const insp={id:tank.id+"-"+Date.now(),tankId:tank.id,tag:tank.id,instalacion:tank.instalacion,producto:tank.producto,capacidad:tank.capacidad,auditor:c.auditor,fecha:new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv2.l,hallazgos,answers:Object.assign({},c.answers),notes:Object.assign({},c.notes),modulo:"Campo R\u00e1pido"};
+  saveInspToLS(insp);showToast("\u2714 Inspecci\u00f3n "+insp.tag+" guardada \u2014 "+insp.score+"% "+insp.nivel);
+  c.tankId=null;c.auditor="";c.idx=0;c.answers={};c.notes={};c.photos={};c.showRisk=false;c.showTpl=false;if(S.recognition){try{S.recognition.stop();}catch(e){}S.recognition=null;}S.recording=false;go("home");
+}
+// Tecnico
+function renderTecnicoSel(){
+  const t=S.tecnico;const tank=S.tanks.find(x=>x.id===t.tankId);
+  return '<div class="c"><div class="f ac gap-sm mb16"><button class="btn-ghost" onclick="go(\'home\')" style="font-size:16px">\u2190</button><div><div style="font-size:18px;font-weight:900;color:var(--tx1)">\uD83D\uDCCB Panel T\u00e9cnico</div><div style="font-size:12px;color:var(--mut)">Formulario completo</div></div></div>'+
+    S.tanks.map(t2=>'<div class="bc r p14 mb8" style="border:2px solid '+(t2.id===t.tankId?"#3b82f6":"var(--bord)")+';cursor:pointer" onclick="tecnicoPickTank(\''+t2.id+'\')"><div class="f js ac"><div><div style="font-size:15px;font-weight:800;color:var(--tx1)">'+t2.id+'</div><div style="font-size:11px;color:var(--mut)">'+t2.instalacion+' \u00b7 '+t2.producto+'</div></div><div style="font-size:12px;color:var(--mut)">'+(t2.capacidad||0).toLocaleString()+' m\u00b3</div></div></div>').join("")+
+    '<div class="g g2 gap-sm mt12 mb8"><div><div style="font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:700">INSPECTOR</div><input type="text" id="tec-aud" placeholder="Nombre completo" value="'+t.auditor+'" oninput="S.tecnico.auditor=this.value"></div>'+
+    '<div><div style="font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:700">FECHA</div><input type="date" id="tec-fecha" value="'+(t.fecha||new Date().toISOString().split("T")[0])+'" oninput="S.tecnico.fecha=this.value"></div></div>'+
+    '<button class="btn" style="width:100%;padding:16px;background:#3b82f6;color:white;font-weight:900;font-size:16px;border:none" onclick="tecnicoStart()">ABRIR FORMULARIO \u2192</button></div>';
+}
+function tecnicoPickTank(id){S.tecnico.tankId=id;render();}
+function tecnicoStart(){const t=S.tecnico;if(!t.tankId||!t.auditor.trim()){showToast("Selecciona tanque e ingresa tu nombre.","#f59e0b");return;}if(!t.fecha)t.fecha=new Date().toISOString().split("T")[0];t.answers={};t.notes={};t.open={1:true};go("tecnico-form");}
+function renderTecnicoForm(){
+  const t=S.tecnico;const tank=S.tanks.find(x=>x.id===t.tankId);
+  const score=calc(t.answers);const lv2=lv(score);
+  const nc=Object.values(t.answers).filter(v=>v==="NC").length;
+  const cp=Object.values(t.answers).filter(v=>v==="CP").length;
+  const answered=Object.keys(t.answers).length;const totalQ=QUESTIONS.length;
+  const opts=[["C","#22c55e"],["CP","#f59e0b"],["NC","#ef4444"],["N/A","var(--mut)"]];
+  let h='<div><div class="th f ac gap-sm"><button class="btn-ghost" onclick="go(\'tecnico-sel\')" style="font-size:13px;font-weight:700">\u2190 Cambiar</button>'+
+    '<div class="f1"><div style="font-size:14px;font-weight:800;color:var(--tx1)">'+(tank?tank.id:"")+' \u2014 '+(tank?tank.instalacion:"")+'</div><div style="font-size:11px;color:var(--mut)">'+t.auditor+' \u00b7 '+t.fecha+'</div></div>'+
+    '<div class="f ac gap-sm"><span style="font-size:13px;font-weight:800;color:'+lv2.c+'">'+score+'%</span><span style="font-size:11px;color:#ef4444;font-weight:700">NC:'+nc+'</span><span style="font-size:11px;color:#f59e0b;font-weight:700">CP:'+cp+'</span></div></div>'+
+    '<div class="f ac gap-sm" style="padding:0 16px 6px;background:var(--bg2)"><div class="cp-h"><div class="cp-b" style="width:'+Math.round((answered/totalQ)*100)+'%;background:#f59e0b"></div></div><span style="font-size:11px;color:var(--mut);flex-shrink:0">'+answered+'/'+totalQ+'</span></div>'+
+    '<div class="tl">'+[["C","Conforme","#22c55e"],["CP","Parcial","#f59e0b"],["NC","No Conf.","#ef4444"],["N/A","No Aplica","var(--mut)"]].map(([k,l,cl])=>'<div class="f ac" style="gap:5px"><div style="width:30px;height:22px;border-radius:6px;background:'+cl+'33;border:2px solid '+cl+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:'+cl+'">'+k+'</div><span style="font-size:11px;color:var(--sub)">'+l+'</span></div>').join("")+'</div><div class="cw">';
+  SECS.forEach(sec=>{
+    const qs=QUESTIONS.filter(q=>q.sid===sec.sid);let st=0,sm=0;
+    qs.forEach(q=>{const r=sq(t.answers[q.id],q.weight,q.barrier);st+=r.s;sm+=r.m;});
+    const spct=sm>0?Math.round((st/sm)*100):0;const slv=lv(spct);const isOpen=t.open[sec.sid];
+    h+='<div class="sc" style="border:1px solid '+(isOpen?"var(--bord2)":"var(--bord)")+'"><div class="sh" onclick="tecnicoToggle('+sec.sid+')">'+
+      '<div class="f ac gap-sm"><span style="font-size:18px">'+sec.icon+'</span><div><div style="font-size:14px;font-weight:800;color:var(--tx1)">'+sec.sec+'</div><div style="font-size:11px;color:var(--mut)">'+qs.length+' \u00edtems</div></div></div>'+
+      '<div class="f ac gap-sm"><div class="tc"><div style="font-size:17px;font-weight:900;color:'+slv.c+'">'+spct+'%</div><div class="badge-sm" style="background:'+slv.c+'22;color:'+slv.c+'">'+slv.l+'</div></div><span style="color:var(--bord2);font-size:13px">'+(isOpen?"\u25b2":"\u25bc")+'</span></div></div>'+
+      '<div class="sp"><div class="sp-b" style="width:'+spct+'%;background:'+slv.c+'"></div></div>';
+    if(isOpen)qs.forEach((q,qi)=>{
+      const cur=t.answers[q.id];
+      h+='<div class="tec-item"><div style="font-size:13px;color:#cbd5e1;line-height:1.5;margin-bottom:9px"><span style="color:var(--bord2);font-weight:700;margin-right:5px">'+q.id+'</span>'+q.text+
+        '<span class="badge-sm" style="margin-left:7px;background:'+(q.barrier==="Preventiva"?"#1d4ed833":"#7c3aed33")+';color:'+(q.barrier==="Preventiva"?"#60a5fa":"#c084fc")+'">'+(q.barrier==="Preventiva"?"Prev.":"Mitig.")+' P'+q.weight+'</span></div>'+
+        '<div class="f fw ac" style="gap:7px">'+
+        opts.map(([opt,cl])=>{const oc=opt==="C"?"#22c55e":opt==="CP"?"#f59e0b":opt==="NC"?"#ef4444":"var(--mut)";return'<button style="min-width:44px;height:36px;border-radius:8px;border:2px solid '+(cur===opt?oc:"var(--bord)")+';cursor:pointer;font-size:11px;font-weight:800;background:'+(cur===opt?oc:"var(--bg2)")+';color:'+(cur===opt?"white":"var(--mut)")+';flex-shrink:0" onclick="tecnicoPick(\''+q.id+'\',\''+opt+'\')">'+opt+'</button>';}).join("")+
+        '<input placeholder="Observaci\u00f3n..." value="'+(t.notes[q.id]||"")+'" oninput="updateTecNote(\''+q.id+'\',this.value)" style="flex:1 1 140px;min-width:100px;background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:8px 10px;color:var(--sub);font-size:12px"></div></div>';
+    });
+    h+='</div>';
+  });
+  h+='<div class="bc r p16 tc mt8 mb16" style="border:2px solid '+lv2.c+'44"><div style="font-size:10px;color:var(--mut);letter-spacing:2px;margin-bottom:4px">PUNTAJE FINAL</div>'+
+    '<div style="font-size:52px;font-weight:900;color:'+lv2.c+';line-height:1">'+score+'<span style="font-size:22px">%</span></div>'+
+    '<div style="font-size:14px;font-weight:700;color:'+lv2.c+';margin-top:5px">'+lv2.l+' \u2014 '+lv2.a+'</div>'+
+    '<button class="btn-suc" style="margin-top:14px;padding:13px 30px;width:auto" onclick="tecnicoSave()" id="tec-save-btn">\u2714 GUARDAR EN SISTEMA</button>'+
+    '<button class="btn" style="margin-top:8px;background:#1e3a5f;color:white;border:none;width:100%;padding:12px;font-weight:700;font-size:13px;cursor:pointer" onclick="printTecnicoReport()">\uD83D\uDCC4 IMPRIMIR REPORTE PDVSA</button></div></div></div>';
+  return h;
+}
+function updateTecNote(qid,v){S.tecnico.notes[qid]=v;}
+function tecnicoToggle(sid){S.tecnico.open[sid]=!S.tecnico.open[sid];render();}
+function tecnicoPick(qid,val){S.tecnico.answers[qid]=S.tecnico.answers[qid]===val?null:val;render();}
+function tecnicoSave(){
+  const t=S.tecnico;const tank=S.tanks.find(x=>x.id===t.tankId);
+  if(!tank||!t.auditor.trim()){showToast("Datos incompletos.","#ef4444");return;}
+  const btn=document.getElementById("tec-save-btn");if(btn){btn.disabled=true;btn.textContent="Guardando\u2026";}
+  const score=calc(t.answers);const lv2=lv(score);
+  const nc=Object.values(t.answers).filter(v=>v==="NC").length;
+  const cp=Object.values(t.answers).filter(v=>v==="CP").length;
+  const hallazgos=QUESTIONS.filter(q=>t.answers[q.id]==="NC"||t.answers[q.id]==="CP").map(q=>({sec:q.sec,id:q.id,txt:t.notes[q.id]||q.text.slice(0,50)+"\u2026",tipo:t.answers[q.id],fotos:0}));
+  const insp={id:tank.id+"-"+Date.now(),tankId:tank.id,tag:tank.id,instalacion:tank.instalacion,producto:tank.producto,capacidad:tank.capacidad,auditor:t.auditor,fecha:t.fecha||new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv2.l,hallazgos,answers:Object.assign({},t.answers),notes:Object.assign({},t.notes),modulo:"Panel T\u00e9cnico"};
+  saveInspToLS(insp);showToast("\u2714 Inspecci\u00f3n "+insp.tag+" guardada \u2014 "+insp.score+"% "+insp.nivel);
+  t.tankId=null;t.auditor="";t.fecha="";t.answers={};t.notes={};t.open={1:true};go("home");
+}
+// Admin
+function showAddTank(){S.admin.addTank=true;render();}
+function setAdminFilt(f){S.admin.filt=f;render();}
+function goToTank(id){S.admin.selTank=id;go("tank-detail");}
+function renderAdminCharts(){
+  const insp=S.inspections;const tanks=S.tanks;
+  const tIns=tid=>insp.filter(i=>i.tankId===tid).sort((x,y)=>new Date(x.fecha)-new Date(y.fecha));
+  const lastI=t=>{const ins=tIns(t.id);return ins.length?ins[ins.length-1]:null;};
+  const fleet=tanks.map(t=>{const li=lastI(t);return{...t,last:li,score:li?.score??null,nivel:li?.nivel??"Sin inspeccion"};});
+  const insp2=fleet.filter(t=>t.score!==null);
+  const distrib=Object.entries(fleet.reduce((a,t)=>{const k=t.nivel||"Sin inspeccion";a[k]=(a[k]||0)+1;return a;},{})).map(([name,value])=>({name,value,color:name==="Sin inspeccion"?"var(--bord2)":lv(insp2.find(t=>t.nivel===name)?.score??0).c}));
+  const allNC=insp.flatMap(i=>(i.hallazgos||[]).filter(h=>h.tipo==="NC").map(h=>({...h,tank:i.tag,fecha:i.fecha,inspector:i.auditor,score:i.score})));
+  const ncBySec={};allNC.forEach(h=>{ncBySec[h.sec]=(ncBySec[h.sec]||0)+1;});
+  const ncSecD=Object.entries(ncBySec).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([name,v])=>({name:name.replace("Contra Incendio","SCI").replace("Sistema de ","").replace("Proteccion ","Prot. ").replace("Deteccion F&G","F&G"),v}));
+  if(distrib.length)drawPieChart("pie-chart",distrib);
+  if(ncSecD.length)drawBarChart("nc-bar-chart",ncSecD,"#ef4444");
+}
+function renderAdmin(){
+  const a=S.admin;const insp=S.inspections;const tanks=S.tanks;
+  const insts=["Todas",...new Set(tanks.map(t=>t.instalacion))];
+  const tIns=tid=>insp.filter(i=>i.tankId===tid).sort((x,y)=>new Date(x.fecha)-new Date(y.fecha));
+  const lastI=t=>{const ins=tIns(t.id);return ins.length?ins[ins.length-1]:null;};
+  const fleet=tanks.map(t=>{const li=lastI(t);return{...t,last:li,score:li?.score??null,nivel:li?.nivel??"Sin inspeccion"};});
+  const insp2=fleet.filter(t=>t.score!==null);
+  const avg=insp2.length?Math.round(insp2.reduce((a,t)=>a+t.score,0)/insp2.length):0;
+  const crit=insp2.filter(t=>t.score<60).length;
+  const totNC=insp.reduce((a,i)=>a+(i.nc||0),0);
+  const filt2=fleet.filter(t=>a.filt==="Todas"||t.instalacion===a.filt);
+  const alerts=[...insp2.filter(t=>t.score<60).map(t=>({tank:t.id,msg:"Critico: "+t.score+"%",c:"#ef4444"})),
+    ...insp2.filter(t=>ds(t.last?.fecha)>180).map(t=>({tank:t.id,msg:ds(t.last.fecha)+"d sin inspeccion",c:"#f97316"})),
+    ...fleet.filter(t=>!t.last).map(t=>({tank:t.id,msg:"Sin inspecciones",c:"#f59e0b"}))];
+  const allNC=insp.flatMap(i=>(i.hallazgos||[]).filter(h=>h.tipo==="NC").map(h=>({...h,tank:i.tag,fecha:i.fecha,inspector:i.auditor,score:i.score})));
+  let h='<div><div class="ah"><button class="btn-ghost" onclick="go(\'home\')" style="font-size:14px;font-weight:700">\u2190 Inicio</button>'+
+    '<div class="f1"><div style="font-size:10px;color:var(--bord2);letter-spacing:2px">DESIAHO \u00b7 PANEL ADMINISTRADOR</div><div style="font-size:15px;font-weight:900;color:var(--tx1)">Gesti\u00f3n de Flota de Tanques</div></div>'+
+    '<button class="btn-ghost" style="background:#22c55e22;border-color:#22c55e44;color:#22c55e;font-weight:700" onclick="showAddTank()">+ Tanque</button>'+
+    '<button class="btn-ghost" style="background:#3b82f622;border-color:#3b82f644;color:#60a5fa;font-weight:700" onclick="printFleetReport()" title="Imprimir o guardar el informe de flota en PDF">⎙ Informe de Flota (PDF)</button>'+
+    '<button class="btn-ghost" onclick="loadData();render()">\ud83d\udd04</button></div>';
+  // Alerts
+  if(alerts.length){
+    h+='<div class="ab"><div class="cw f fw ac gap-sm"><span style="font-size:11px;font-weight:700;color:#ef4444;flex-shrink:0">\u26a0\ufe0f '+alerts.length+' alertas:</span>'+
+      alerts.map(a=>'<div class="alert-item" style="background:'+a.c+'11;border:1px solid '+a.c+'44;cursor:pointer;padding:4px 12px;border-radius:8px;display:flex;gap:6px;align-items:center" onclick="goToTank(\''+a.tank+'\')"><span style="font-size:11px;font-weight:800;color:'+a.c+'">'+a.tank+'</span><span style="font-size:10px;color:var(--sub)">'+a.msg+'</span></div>').join("")+'</div></div>';
+  }
+  h+='<div class="cw"><div class="g" style="grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'+
+    [[avg+"%","SCORE PROMEDIO",lv(avg).c],[insp.length,"INSPECCIONES","#3b82f6"],[crit,"CRITICOS <60%",crit>0?"#ef4444":"#22c55e"],[totNC,"NC TOTALES",totNC>10?"#ef4444":"#f59e0b"]].map(([v,l,cl])=>'<div class="bc r p16 tc" style="border:1px solid '+cl+'22"><div style="font-size:9px;color:var(--mut);letter-spacing:1.5px;margin-bottom:3px">'+l+'</div><div style="font-size:28px;font-weight:900;color:'+cl+';line-height:1">'+v+'</div></div>').join("")+
+    '</div>';
+  // Charts area
+  const fleetNiv=Object.entries(fleet.reduce((a,t)=>{const k=t.nivel||"Sin inspeccion";a[k]=(a[k]||0)+1;return a;},{})).map(([name,value])=>({name,value,color:name==="Sin inspeccion"?"var(--bord2)":lv(insp2.find(t=>t.nivel===name)?.score??0).c}));
+  const ncBs={};allNC.forEach(h=>{ncBs[h.sec]=(ncBs[h.sec]||0)+1;});
+  const ncBd=Object.entries(ncBs).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([name,v])=>({name:name.replace("Contra Incendio","SCI").replace("Sistema de ","").replace("Proteccion ","Prot. ").replace("Deteccion F&G","F&G"),v}));
+  h+='<div class="g gap-sm mb16" style="grid-template-columns:1fr 1fr">';
+  h+='<div class="bc r p14"><div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:10px">NIVELES DE FLOTA</div><div class="ct"><canvas id="pie-chart" class="chart"></canvas></div></div>';
+  h+='<div class="bc r p14"><div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:10px">NC POR SECCION</div><div class="ct"><canvas id="nc-bar-chart" class="chart"></canvas></div></div>';
+  h+='</div>';
+  // Filter
+  h+='<div class="bc r p12 mb8 f fw ac gap-sm"><span style="font-size:11px;color:var(--mut);font-weight:700">INSTALACI\u00d3N:</span>'+
+    insts.map(inst=>'<button class="btn-ghost" style="padding:4px 12px;font-size:11px;background:'+(a.filt===inst?"#f59e0b22":"var(--bg2)")+';border-color:'+(a.filt===inst?"#f59e0b":"var(--bord)")+';color:'+(a.filt===inst?"#f59e0b":"var(--mut)")+';font-weight:'+(a.filt===inst?700:400)+'" onclick="setAdminFilt(\''+inst+'\')">'+inst+'</button>').join("")+
+    '<span style="margin-left:auto;font-size:11px;color:var(--mut)">'+insp.length+' inspecciones \u00b7 '+tanks.length+' tanques</span></div>';
+  // Table
+  h+='<div class="bc r mb16" style="overflow:hidden"><div class="at" style="grid-template-columns:80px 1fr 90px 65px 42px 42px 90px 65px">'+["TAG","INSTALACION / PRODUCTO","NIVEL","SCORE","NC","CP","ULT. INSP.","DIAS"].map(h=>"<div>"+h+"</div>").join("")+'</div>';
+  filt2.forEach((tank,i)=>{
+    const lv3=tank.score!==null?lv(tank.score):{l:"Sin datos",c:"var(--mut)"};
+    const days=tank.last?ds(tank.last.fecha):null;
+    const dc=days===null?"var(--mut)":days>180?"#ef4444":days>120?"#f59e0b":"#22c55e";
+    h+='<div class="ar" style="grid-template-columns:80px 1fr 90px 65px 42px 42px 90px 65px;background:'+(i%2===0?"var(--surf)":"var(--row2)")+'" onclick="goToTank(\''+tank.id+'\')">'+
+      '<div style="font-size:13px;font-weight:900;color:var(--tx1)">'+tank.id+'</div>'+
+      '<div><div style="font-size:12px;font-weight:600;color:var(--tx2)">'+tank.instalacion+'</div><div style="font-size:10px;color:var(--mut)">'+tank.producto+' \u00b7 '+(tank.capacidad||0).toLocaleString()+' m\u00b3</div></div>'+
+      '<div>'+(tank.score!==null?'<span class="badge-sm" style="background:'+lv3.c+'22;color:'+lv3.c+'">'+lv3.l+'</span>':'<span style="font-size:10px;color:var(--bord2)">Sin insp.</span>')+'</div>'+
+      '<div style="font-size:17px;font-weight:900;color:'+lv3.c+'">'+(tank.score!==null?tank.score+"%":"\u2014")+'</div>'+
+      '<div style="font-size:14px;font-weight:800;color:'+(tank.last?.nc>0?"#ef4444":"#22c55e")+'">'+(tank.last?.nc??"\u2014")+'</div>'+
+      '<div style="font-size:14px;font-weight:800;color:'+(tank.last?.cp>0?"#f59e0b":"#22c55e")+'">'+(tank.last?.cp??"\u2014")+'</div>'+
+      '<div style="font-size:11px;color:var(--sub)">'+(tank.last?.fecha??"Nunca")+'</div>'+
+      '<div style="font-size:12px;font-weight:700;color:'+dc+'">'+(days!==null?days+"d":"\u2014")+'</div></div>';
+  });
+  h+='</div>';
+  // NC list
+  if(allNC.length){
+    h+='<div class="bc r p16 mb16"><div style="font-size:13px;font-weight:700;color:#ef4444;margin-bottom:12px">\ud83d\udd34 NC REGISTRADAS ('+allNC.length+')</div>';
+    allNC.slice(0,20).forEach((nc,i)=>{
+      h+='<div class="f gap-sm" style="padding:10px;background:var(--bg2);border-radius:10px;margin-bottom:6px;border-left:3px solid #ef4444;cursor:pointer;align-items:flex-start" onclick="goToTank(\''+nc.tank+'\')">'+
+        '<div style="flex-shrink:0;text-align:center;min-width:58px"><div style="font-size:12px;font-weight:900;color:var(--tx1)">'+nc.tank+'</div><div style="font-size:9px;color:var(--mut)">'+nc.fecha+'</div></div>'+
+        '<div class="f1"><div style="font-size:10px;color:var(--bord2);margin-bottom:2px">'+nc.id+' \u00b7 '+nc.sec+'</div><div style="font-size:12px;color:var(--tx2)">'+nc.txt+'</div></div>'+
+        '<div style="flex-shrink:0;text-align:right"><div style="font-size:11px;color:var(--mut)">'+nc.inspector+'</div><div style="font-size:12px;color:'+lv(nc.score).c+';font-weight:700">'+nc.score+'%</div></div></div>';
+    });
+    if(allNC.length>20)h+='<div class="tc" style="font-size:11px;color:var(--mut);padding:8px">y '+(allNC.length-20)+' m\u00e1s \u2014 clic en el tanque para detalle.</div>';
+    h+='</div>';
+  }
+  h+='<div class="tc" style="font-size:10px;color:var(--bord);padding:8px">DESIAHO \u00b7 Panel Administrador \u00b7 API 650/653 \u00b7 NFPA 11/30 \u00b7 IEC 61511</div></div></div>';
+  // Add tank modal
+  if(a.addTank){
+    h+='<div class="mc"><div class="mc-b"><div style="font-size:15px;font-weight:800;color:var(--tx1);margin-bottom:16px">+ Registrar Nuevo Tanque</div>'+
+      [["id","TAG / ID *","text","TK-007"],["instalacion","Instalaci\u00f3n *","text","Bater\u00eda Norte"],["producto","Producto","text","Crudo 20\u00b0 API"],["capacidad","Capacidad (m\u00b3)","number","5000"],["custodio","Custodio","text","Ing. Nombre Apellido"]].map(([k,l,t,ph])=>
+        '<div class="mb8"><div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">'+l+'</div><input type="'+t+'" value="'+(a.newTank[k]||"")+'" placeholder="'+ph+'" oninput="S.admin.newTank.'+k+'=this.value" style="width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:10px 12px;color:var(--tx1);font-size:14px;box-sizing:border-box"></div>'
+      ).join("")+
+      '<div class="f gap-sm mt16"><button class="btn-ghost" style="flex:1;padding:12px;text-align:center;font-size:14px" onclick="S.admin.addTank=false;render()">Cancelar</button>'+
+      '<button class="btn-ghost" style="flex:2;padding:12px;text-align:center;font-size:14px;background:#22c55e;border-color:#22c55e;color:#0a0f1e;font-weight:800" onclick="addNewTank()">\u2714 Guardar Tanque</button></div></div></div>';
+  }
+  return h;
+}
+function addNewTank(){
+  const n=S.admin.newTank;
+  if(!n.id||!n.instalacion){showToast("TAG e Instalaci\u00f3n son obligatorios.","#f59e0b");return;}
+  S.tanks.push({id:n.id,instalacion:n.instalacion,producto:n.producto||"",capacidad:Number(n.capacidad)||0,custodio:n.custodio||""});
+  saveTanksToLS();S.admin.addTank=false;S.admin.newTank={id:"",instalacion:"",producto:"",capacidad:"",custodio:""};render();
+}
+function renderTankDetail(){
+  const a=S.admin;const tank=S.tanks.find(t=>t.id===a.selTank);
+  if(!tank)return go("admin");
+  const ins=S.inspections.filter(i=>i.tankId===tank.id).sort((x,y)=>new Date(x.fecha)-new Date(y.fecha));
+  const last=ins[ins.length-1];const lv2=last?lv(last.score):{l:"Sin datos",c:"var(--mut)"};
+  const trend=ins.map(i=>({f:i.fecha?.slice(5),score:i.score,nc:i.nc}));
+  const delta=ins.length>1?ins[ins.length-1].score-ins[ins.length-2].score:null;
+  let h='<div><div class="ah"><button class="btn-ghost" onclick="go(\'admin\')" style="font-size:14px;font-weight:700">\u2190 Flota</button>'+
+    '<div class="f1"><div style="font-size:17px;font-weight:900;color:var(--tx1)">'+tank.id+'</div><div style="font-size:12px;color:var(--mut)">'+tank.instalacion+' \u00b7 '+tank.producto+' \u00b7 '+(tank.capacidad||0).toLocaleString()+' m\u00b3 \u00b7 '+tank.custodio+'</div></div>'+
+    (last?'<div class="tc"><div style="font-size:22px;font-weight:900;color:'+lv2.c+'">'+last.score+'%</div><div class="badge-sm" style="background:'+lv2.c+'22;color:'+lv2.c+'">'+lv2.l+'</div></div>':'')+'</div>';
+  h+='<div class="cw">';
+  if(last){
+    h+='<div class="g" style="grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'+
+      [[last.score+"%","Puntaje",lv2.c],[delta!==null?(delta>=0?"+"+delta+"%":delta+"%"):"\u2014","Tendencia",delta===null?"var(--mut)":delta>=0?"#22c55e":"#ef4444"],[last.nc,"NC",last.nc>0?"#ef4444":"#22c55e"],[ds(last.fecha)+"d","D\u00edas",ds(last.fecha)>180?"#ef4444":"var(--mut)"]].map(([v,l,cl])=>
+        '<div class="bc r p14 tc" style="border:1px solid '+cl+'22"><div style="font-size:9px;color:var(--mut);letter-spacing:1.5px;margin-bottom:3px">'+l+'</div><div style="font-size:24px;font-weight:900;color:'+cl+';line-height:1">'+v+'</div></div>'
+      ).join("")+'</div>';
+  }
+  if(trend.length>1){
+    h+='<div class="bc r p16 mb16"><div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:12px">\ud83d\udcc8 TENDENCIA HIST\u00d3RICA</div><div class="ct"><canvas id="tank-trend" class="chart"></canvas></div></div>';
+  }
+  h+='<div class="bc r p16 mb16"><div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:12px">\ud83d\udccb HISTORIAL ('+ins.length+' inspecciones)</div>';
+  if(!ins.length)h+='<div class="tc" style="padding:24px;color:var(--bord2);font-size:13px">Sin inspecciones registradas.</div>';
+  else{
+    [...ins].reverse().forEach((insp,i)=>{
+      const ilv=lv(insp.score);const isO=a.selInsp===insp.id;
+      h+='<div class="bc r mb6" style="overflow:hidden;border:1px solid '+ilv.c+'33">'+
+        '<div class="f p12" style="cursor:pointer;justify-content:space-between;align-items:flex-start" onclick="toggleInsp(\''+insp.id+'\')">'+
+        '<div><div style="font-size:13px;font-weight:700;color:var(--tx1)">'+insp.fecha+'</div><div style="font-size:11px;color:var(--mut)">'+insp.auditor+' \u00b7 '+(insp.modulo||"Manual")+'</div></div>'+
+        '<div class="tc"><div style="font-size:19px;font-weight:900;color:'+ilv.c+'">'+insp.score+'%</div><div class="badge-sm" style="background:'+ilv.c+'22;color:'+ilv.c+'">'+ilv.l+'</div></div></div>';
+      if(isO){
+        const cCount=Object.values(insp.answers||{}).filter(v=>v==="C").length;
+        h+='<div class="p12" style="padding-top:0"><div class="f gap-sm mb8"><span style="font-size:12px;color:#22c55e;font-weight:700">C:'+cCount+'</span><span style="font-size:12px;color:#f59e0b;font-weight:700">CP:'+(insp.cp||0)+'</span><span style="font-size:12px;color:#ef4444;font-weight:700">NC:'+(insp.nc||0)+'</span></div>';
+        (insp.hallazgos||[]).forEach(hj=>{
+          h+='<div class="f gap-sm" style="padding:6px 10px;background:var(--surf);border-radius:8px;margin-bottom:4px;border-left:3px solid '+(hj.tipo==="NC"?"#ef4444":"#f59e0b")+'"><span style="font-size:10px;color:var(--mut);flex-shrink:0;font-weight:700">'+hj.id+'</span><span style="font-size:11px;color:#cbd5e1;flex:1">'+hj.txt+'</span><span class="badge-sm" style="background:'+(hj.tipo==="NC"?"#ef444422":"#f59e0b22")+';color:'+(hj.tipo==="NC"?"#ef4444":"#f59e0b")+';flex-shrink:0">'+hj.tipo+'</span></div>';
+        });
+        if(!(insp.hallazgos||[]).length)h+='<div style="font-size:11px;color:var(--bord2);font-style:italic">Sin hallazgos registrados.</div>';
+        h+='</div>';
+      }
+      h+='</div>';
+    });
+  }
+  h+='</div></div></div>';
+  return h;
+}
+function toggleInsp(id){S.admin.selInsp=S.admin.selInsp===id?null:id;render();}
+function renderTankCharts(){
+  const tank=S.tanks.find(t=>t.id===S.admin.selTank);
+  if(!tank)return;
+  const ins=S.inspections.filter(i=>i.tankId===tank.id).sort((x,y)=>new Date(x.fecha)-new Date(y.fecha));
+  const trend=ins.map(i=>({f:i.fecha?.slice(5),score:i.score,nc:i.nc}));
+  if(trend.length>1){const sc=ins[ins.length-1].score;const lv2=sc!==undefined?lv(sc):{c:"#3b82f6"};drawTrendChart("tank-trend",trend,lv2.c);}
+}
+// Print PDVSA Report
+function printReport(insp, tank, modulo){
+  const secData=SECS.map(s=>{let t=0,m=0;QUESTIONS.filter(q=>q.sid===s.sid).forEach(q=>{const r=sq(insp.answers[q.id],q.weight,q.barrier);t+=r.s;m+=r.m;});return{...s,pct:m>0?Math.round((t/m)*100):0};});
+  const ncItems=QUESTIONS.filter(q=>insp.answers[q.id]==="NC"||insp.answers[q.id]==="CP");
+  const lv2=lv(insp.score);
+  const totals={c:Object.values(insp.answers).filter(v=>v==="C").length,cp:Object.values(insp.answers).filter(v=>v==="CP").length,nc:Object.values(insp.answers).filter(v=>v==="NC").length,na:Object.values(insp.answers).filter(v=>v==="N/A").length,pend:QUESTIONS.length-Object.keys(insp.answers).length};
+  const critNC=ncItems.filter(q=>q.weight>=9&&insp.answers[q.id]==="NC");
+  const prevCount=QUESTIONS.filter(q=>q.barrier==="Preventiva").filter(q=>insp.answers[q.id]==="NC"||insp.answers[q.id]==="CP").length;
+  const mitCount=QUESTIONS.filter(q=>q.barrier==="Mitigaci\u00f3n").filter(q=>insp.answers[q.id]==="NC"||insp.answers[q.id]==="CP").length;
+  const w=window.open("","_blank","width=900,height=700");
+  const S=(txt)=>'<span style="font-size:11px;color:#64748b">'+txt+'</span>';
+  const bar=(pct,cl)=>'<div style="height:16px;background:#e2e8f0;border-radius:8px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+cl+';border-radius:8px;transition:width .3s"></div></div>';
+  const ansBadge=(val)=>{
+    if(val==="C")return'<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:800;background:#22c55e22;color:#22c55e">C</span>';
+    if(val==="CP")return'<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:800;background:#f59e0b22;color:#f59e0b">CP</span>';
+    if(val==="NC")return'<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:800;background:#ef444422;color:#ef4444">NC</span>';
+    if(val==="N/A")return'<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;background:#e2e8f0;color:#94a3b8">N/A</span>';
+    return S("Pendiente");
+  };
+  let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DESIAHO - Informe PDVSA</title>'+
+    '<style>'+
+    '*{margin:0;padding:0;box-sizing:border-box}'+
+    'body{font-family:"Segoe UI",Arial,sans-serif;color:#1e293b;padding:30px 40px;font-size:12px;line-height:1.5}'+
+    '@page{margin:20mm 15mm}'+
+    '.page-header{text-align:center;border-bottom:3px solid #1e3a5f;padding-bottom:16px;margin-bottom:20px}'+
+    '.page-header .e{font-size:18px;font-weight:900;color:#1e3a5f;letter-spacing:2px}'+
+    '.page-header .s{font-size:11px;color:#64748b;margin-top:2px}'+
+    '.page-header .m{font-size:9px;color:#94a3b8;margin-top:1px}'+
+    '.sec-title{font-size:13px;font-weight:800;color:#1e3a5f;margin:20px 0 10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f}'+
+    '.sec-sub{font-size:11px;font-weight:700;color:#475569;margin:14px 0 6px}'+
+    'table.tbl{width:100%;border-collapse:collapse;margin-bottom:14px}'+
+    'table.tbl th,table.tbl td{padding:5px 7px;text-align:left;border:1px solid #e2e8f0;font-size:10.5px;vertical-align:top}'+
+    'table.tbl th{background:#1e3a5f;color:white;font-weight:700;font-size:10px}'+
+    'table.tbl tr:nth-child(even){background:#f8fafc}'+
+    'table.tbl tr:hover{background:#eef2ff}'+
+    '.sb{text-align:center;padding:18px;background:#f8fafc;border-radius:10px;margin-bottom:18px}'+
+    '.sb .n{font-size:44px;font-weight:900;line-height:1}'+
+    '.sb .l{font-size:15px;font-weight:700;margin-top:3px}'+
+    '.sb .a{font-size:11px;color:#64748b;margin-top:5px}'+
+    '.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}'+
+    '.kpi>div{text-align:center;padding:10px 4px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0}'+
+    '.kpi>div .v{font-size:22px;font-weight:900;line-height:1.2}'+
+    '.kpi>div .l{font-size:8.5px;color:#64748b;font-weight:600;letter-spacing:.5px}'+
+    '.ig{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}'+
+    '.ig>div{padding:6px 10px;background:#f8fafc;border-radius:5px}'+
+    '.ig>div l{font-size:9px;color:#94a3b8;font-weight:700;display:block}'+
+    '.ig>div s{font-size:12px;color:#0f172a;font-weight:600}'+
+    '.fi{padding:7px 10px;border-radius:5px;margin-bottom:5px;font-size:11px}'+
+    '.fi.nc{border-left:4px solid #ef4444;background:#fef2f2}'+
+    '.fi.cp{border-left:4px solid #f59e0b;background:#fffbeb}'+
+    '.fi .h{font-size:9px;color:#64748b;font-weight:700}'+
+    '.fi .q{font-size:11.5px;color:#0f172a;margin:2px 0}'+
+    '.fi .o{font-size:10.5px;color:#64748b;margin-top:2px}'+
+    '.rec{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px;margin-bottom:14px}'+
+    '.rec ul{margin:4px 0 0 16px}'+
+    '.rec li{font-size:11px;color:#0c4a6e;margin-bottom:3px}'+
+    '.fo{text-align:center;font-size:9px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;margin-top:20px}'+
+    '.fo .sg{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:16px}'+
+    '.fo .sg>div{text-align:center;padding-top:26px;border-top:1px solid #94a3b8;font-size:11px;color:#475569}'+
+    '.pbk{page-break-before:always}'+
+    '@media print{body{padding:0}}'+
+    '.warn{background:#fffbeb;border:1px solid #fde68a;border-radius:5px;padding:8px 10px;font-size:11px;color:#92400e;margin-bottom:10px}'+
+    '</style></head><body>'+
+
+    '<!-- PAGE 1: HEADER + EXECUTIVE SUMMARY -->'+
+    '<div class="page-header">'+
+    '<div class="e">PETR\xd3LEOS DE VENEZUELA S.A. (PDVSA)</div>'+
+    '<div class="s">DESIAHO \u2014 SISTEMA INTEGRAL DE RIESGOS</div>'+
+    '<div class="s">INFORME EJECUTIVO DE INSPECCI\xd3N</div>'+
+    '<div class="s">TANQUES ATMOSF\xc9RICOS \u2014 TECHO C\xd3NICO</div>'+
+    '<div class="m">'+(modulo||"")+' \u00b7 API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div></div>'+
+
+    '<div class="sb" style="border:3px solid '+lv2.c+'"><div class="n" style="color:'+lv2.c+'">'+insp.score+'%</div>'+
+    '<div class="l" style="color:'+lv2.c+'">'+insp.nivel+'</div><div class="a">'+lv2.a+'</div></div>'+
+
+    '<div class="kpi">'+
+    '<div><div class="v" style="color:#22c55e">'+totals.c+'</div><div class="l">CONFORME</div></div>'+
+    '<div><div class="v" style="color:#f59e0b">'+totals.cp+'</div><div class="l">PARCIAL</div></div>'+
+    '<div><div class="v" style="color:#ef4444">'+totals.nc+'</div><div class="l">NO CONF.</div></div>'+
+    '<div><div class="v" style="color:#64748b">'+totals.na+'</div><div class="l">N/A</div></div>'+
+    '<div><div class="v" style="color:#94a3b8">'+totals.pend+'</div><div class="l">PEND.</div></div></div>'+
+
+    '<div class="ig">'+
+    '<div><l>TANQUE</l><s>'+(tank?tank.id:"")+'</s></div>'+
+    '<div><l>INSTALACI\xd3N</l><s>'+(tank?tank.instalacion:"")+'</s></div>'+
+    '<div><l>PRODUCTO</l><s>'+(tank?tank.producto:"")+'</s></div>'+
+    '<div><l>CAPACIDAD</l><s>'+(tank?((tank.capacidad||0).toLocaleString()+" m\xb3"):"")+'</s></div>'+
+    '<div><l>INSPECTOR</l><s>'+insp.auditor+'</s></div>'+
+    '<div><l>FECHA</l><s>'+insp.fecha+'</s></div>'+
+    '<div><l>CUSTODIO</l><s>'+(tank?tank.custodio:"")+'</s></div>'+
+    '<div><l>M\xd3DULO</l><s>'+insp.modulo+'</s></div></div>'+
+
+    (critNC.length?'<div class="warn"><strong>\u26a0\ufe0f CR\xcdTICO:</strong> '+critNC.length+' hallazgo(s) con peso P9 en estado NC requieren atenci\xf3n inmediata.</div>':'')+
+
+    '<!-- PAGE 2: SECTION ANALYSIS -->'+
+    '<div class="sec-title">AN\xc1LISIS POR SECCI\xd3N</div>'+
+    '<table class="tbl"><tr><th>#</th><th>Secci\xf3n</th><th style="text-align:center">\xcdtems</th><th style="text-align:center">\%</th><th style="text-align:center">Barra</th><th>Nivel</th><th style="text-align:center">C</th><th style="text-align:center">CP</th><th style="text-align:center">NC</th></tr>'+
+    secData.map(s=>{
+      const slv=lv(s.pct);
+      const qs=QUESTIONS.filter(q=>q.sid===s.sid);
+      const cC=qs.filter(q=>insp.answers[q.id]==="C").length;
+      const cpC=qs.filter(q=>insp.answers[q.id]==="CP").length;
+      const ncC=qs.filter(q=>insp.answers[q.id]==="NC").length;
+      return '<tr><td style="text-align:center;font-weight:700">'+s.sid+'</td><td>'+s.sec+'</td><td style="text-align:center">'+qs.length+'</td>'+
+        '<td style="text-align:center;font-weight:700;color:'+slv.c+'">'+s.pct+'%</td>'+
+        '<td style="width:100px">'+bar(s.pct,slv.c)+'</td>'+
+        '<td><span style="font-size:10px;font-weight:600;color:'+slv.c+'">'+slv.l+'</span></td>'+
+        '<td style="text-align:center;color:#22c55e;font-weight:700">'+cC+'</td>'+
+        '<td style="text-align:center;color:#f59e0b;font-weight:700">'+cpC+'</td>'+
+        '<td style="text-align:center;color:#ef4444;font-weight:700">'+ncC+'</td></tr>';
+    }).join("")+
+    '<tr style="font-weight:800;background:#eef2ff"><td colspan="2">TOTAL</td><td style="text-align:center">'+QUESTIONS.length+'</td>'+
+    '<td style="text-align:center;color:'+lv2.c+'">'+insp.score+'%</td><td>'+bar(insp.score,lv2.c)+'</td>'+
+    '<td style="color:'+lv2.c+'">'+lv2.l+'</td>'+
+    '<td style="text-align:center;color:#22c55e">'+totals.c+'</td>'+
+    '<td style="text-align:center;color:#f59e0b">'+totals.cp+'</td>'+
+    '<td style="text-align:center;color:#ef4444">'+totals.nc+'</td></tr>'+
+    '</table>'+
+
+    '<!-- RISK PROFILE -->'+
+    '<div class="sec-title">PERFIL DE RIESGO</div>'+
+    '<table class="tbl"><tr><th>Tipo de Barrera</th><th style="text-align:center">Total \xcdtems</th><th style="text-align:center">Hallazgos (NC+CP)</th><th style="text-align:center">\% Afectaci\xf3n</th></tr>'+
+    (()=>{
+      const prevTotal=QUESTIONS.filter(q=>q.barrier==="Preventiva").length;
+      const mitTotal=QUESTIONS.filter(q=>q.barrier==="Mitigaci\u00f3n").length;
+      return '<tr><td>Preventiva</td><td style="text-align:center">'+prevTotal+'</td><td style="text-align:center;color:'+(prevCount>0?'#ef4444':'#22c55e')+';font-weight:700">'+prevCount+'</td><td style="text-align:center">'+(prevTotal?Math.round(prevCount/prevTotal*100):0)+'%</td></tr>'+
+        '<tr><td>Mitigaci\xf3n</td><td style="text-align:center">'+mitTotal+'</td><td style="text-align:center;color:'+(mitCount>0?'#ef4444':'#22c55e')+';font-weight:700">'+mitCount+'</td><td style="text-align:center">'+(mitTotal?Math.round(mitCount/mitTotal*100):0)+'%</td></tr>';
+    })()+
+    '</table>'+
+
+    '<!-- EXECUTIVE FINDINGS REGISTER -->'+
+    (ncItems.length?'<div class="sec-title pbk">REGISTRO DE HALLAZGOS</div>'+
+    '<table class="tbl"><tr><th>ID</th><th>Secci\xf3n</th><th>Pregunta</th><th style="text-align:center">Tipo</th><th style="text-align:center">Peso</th><th>Observaci\xf3n</th></tr>'+
+    ncItems.map(q=>'<tr>'+
+      '<td style="font-weight:700;white-space:nowrap">'+q.id+'</td>'+
+      '<td>'+q.sec.slice(0,18)+'</td>'+
+      '<td style="font-size:10px">'+q.text.slice(0,60)+'</td>'+
+      '<td style="text-align:center">'+(insp.answers[q.id]==="NC"?'<span style="color:#ef4444;font-weight:800">NC</span>':'<span style="color:#f59e0b;font-weight:800">CP</span>')+'</td>'+
+      '<td style="text-align:center"><span style="display:inline-block;padding:1px 6px;border-radius:3px;background:'+(q.weight>=9?'#ef444422':q.weight>=6?'#f59e0b22':'#64748b22')+';color:'+(q.weight>=9?'#ef4444':q.weight>=6?'#f59e0b':'#64748b')+';font-weight:700;font-size:10px">P'+q.weight+'</span></td>'+
+      '<td style="font-size:10px;color:#475569;max-width:200px">'+(insp.notes[q.id]||'\u2014')+'</td>'+
+      '</tr>').join("")+
+    '</table>':"")+
+
+    (critNC.length?'<div class="sec-title">HALLAZGOS CR\xcdTICOS (P9)</div>'+
+    critNC.map(q=>'<div class="fi nc"><div class="h">'+q.id+' \u00b7 '+q.sec+' \u00b7 PESO '+q.weight+'</div>'+
+      '<div class="q">'+q.text+'</div>'+
+      '<div class="o"><strong>Riesgo:</strong> '+q.risk+'</div>'+
+      (insp.notes[q.id]?'<div class="o"><strong>Obs:</strong> '+insp.notes[q.id]+'</div>':'')+
+      '</div>').join(""):"")+
+
+    '<!-- ANSWER MATRIX -->'+
+    '<div class="sec-title pbk">MATRIZ DE RESPUESTAS</div>'+
+    '<table class="tbl"><tr><th>ID</th><th>Secci\xf3n</th><th>Pregunta</th><th style="text-align:center">Respuesta</th><th>Observaci\xf3n</th></tr>'+
+    QUESTIONS.map((q,i)=>{
+      const sec=SECS.find(s=>s.sid===q.sid);
+      return '<tr>'+
+        '<td style="font-weight:700;white-space:nowrap;font-size:10px">'+q.id+'</td>'+
+        '<td style="font-size:10px">'+(sec?sec.sec.slice(0,14):"")+'</td>'+
+        '<td style="font-size:10px">'+q.text.slice(0,55)+'</td>'+
+        '<td style="text-align:center;min-width:46px">'+ansBadge(insp.answers[q.id])+'</td>'+
+        '<td style="font-size:10px;color:#64748b;max-width:140px">'+(insp.notes[q.id]?insp.notes[q.id].slice(0,40):'')+'</td></tr>';
+    }).join("")+
+    '</table>'+
+
+    '<!-- OBSERVATIONS -->'+
+    '<div class="sec-title">REGISTRO DE OBSERVACIONES</div>'+
+    (Object.keys(insp.notes||{}).length?
+      Object.entries(insp.notes||{}).filter(([,v])=>v).map(([k,v])=>{
+        const q=QUESTIONS.find(q2=>q2.id===k);
+        return'<div style="padding:5px 8px;border-bottom:1px solid #e2e8f0;font-size:11px;display:flex;gap:8px">'+
+          '<span style="font-weight:700;color:#64748b;white-space:nowrap;font-size:10px">'+(q?q.id:"")+'</span>'+
+          '<span style="color:#475569">'+(v||"")+'</span></div>';
+      }).join(""):
+      '<div style="font-size:11px;color:#94a3b8;font-style:italic">No se registraron observaciones.</div>')+
+
+    '<!-- RECOMMENDATIONS -->'+
+    '<div class="sec-title">RECOMENDACIONES</div>'+
+    '<div class="rec"><strong>Acci\xf3n recomendada seg\xfan nivel de riesgo:</strong>'+
+    '<ul>'+
+    (insp.score>=90?'<li>Mantener programa de inspecci\xf3n preventiva actual. Continuar monitoreo peri\xf3dico.</li><li>Documentar mejores pr\xe1cticas para futuras inspecciones.</li><li>Programar pr\xf3xima inspecci\xf3n en 12 meses.</li>':
+    insp.score>=75?'<li>Reforzar \xe1reas con puntaje parcial. Establecer plan de mejora continua.</li><li>Programar inspecci\xf3n de seguimiento en 6 meses.</li><li>Capacitar personal en puntos identificados como CP.</li>':
+    insp.score>=60?'<li>Ejecutar plan de acci\xf3n correctiva en 6 meses. Priorizar hallazgos NC.</li><li>Realizar an\xe1lisis de causa ra\xedz para cada NC.</li><li>Establecer cronograma de cierre con responsables.</li>':
+    insp.score>=45?'<li>INTERVENCI\xd3N REQUERIDA EN 90 D\xcdAS. Detener operaci\xf3n si hay NC cr\xedticos.</li><li>Evaluar integridad estructural por ingenier\xeda especializada.</li><li>Desarrollar plan de reparaci\xf3n detallado con costos.</li>':
+    insp.score>=30?'<li>INTERVENCI\xd3N INMEDIATA REQUERIDA. Evaluar detenci\xf3n de servicio.</li><li>Inspecci\xf3n detallada por tercero acreditado (API 653).</li><li>Notificar a gerencia de operaciones y seguridad de procesos.</li>':
+    '<li>DETENER SERVICIO. Riesgo Alto de p\xe9rdida de contenci\xf3n.</li><li>Coordinaci\xf3n inmediata con ingenier\xeda de integridad.</li><li>Evaluar drenado, limpieza y retiro de servicio.</li>')+
+    (critNC.length?'<li>Atenci\xf3n inmediata a los '+critNC.length+' hallazgo(s) cr\xedtico(s) identificados (Peso P9 con estado NC).</li><li>Los hallazgos cr\xedticos deben ser revisados por el equipo de integridad mec\xe1nica.</li>':'')+
+    (prevCount>0?'<li>Los hallazgos en barreras Preventivas ('+prevCount+') indican oportunidades de mejora en el mantenimiento programado.</li>':'')+
+    (mitCount>0?'<li>Los hallazgos en barreras de Mitigaci\xf3n ('+mitCount+') requieren verificaci\xf3n de sistemas de protecci\xf3n y respuesta a emergencias.</li>':'')+
+    '</ul></div>'+
+
+    '<div class="fo">'+
+    '<div>DESIAHO v1.0 \u2014 Sistema Integral de Riesgos \u2014 Seguridad de los Procesos</div>'+
+    '<div style="margin-top:2px">API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div>'+
+    '<div style="margin-top:10px;font-size:10px">Documento generado por DESIAHO \u2014 Fecha: '+new Date().toISOString().split("T")[0]+'</div>'+
+    '<div class="sg"><div>FIRMA DEL INSPECTOR</div><div>FIRMA DEL SUPERVISOR / GERENTE</div></div></div>'+
+    '</body></html>';
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},300);
+}
+function printCampoReport(){
+  const c=S.campo;const tank=S.tanks.find(t=>t.id===c.tankId);
+  if(!tank){showToast("Datos de tanque no disponibles.","#ef4444");return;}
+  const score=calc(c.answers);const nc=Object.values(c.answers).filter(v=>v==="NC").length;
+  const cp=Object.values(c.answers).filter(v=>v==="CP").length;
+  const insp={auditor:c.auditor,fecha:new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv(score).l,answers:Object.assign({},c.answers),notes:Object.assign({},c.notes),modulo:"Campo R\u00e1pido"};
+  printReport(insp,tank,"Campo R\u00e1pido");
+}
+function printTecnicoReport(){
+  const t=S.tecnico;const tank=S.tanks.find(x=>x.id===t.tankId);
+  if(!tank){showToast("Datos de tanque no disponibles.","#ef4444");return;}
+  const score=calc(t.answers);const nc=Object.values(t.answers).filter(v=>v==="NC").length;
+  const cp=Object.values(t.answers).filter(v=>v==="CP").length;
+  const insp={auditor:t.auditor,fecha:t.fecha||new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv(score).l,answers:Object.assign({},t.answers),notes:Object.assign({},t.notes),modulo:"Panel Técnico"};
+  printReport(insp,tank,"Panel Técnico");
+}
+// Print Fleet Report (Admin) - resultados por instalación
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function dsSafe(d){const x=new Date(d);return isNaN(x.getTime())?null:Math.floor((Date.now()-x)/864e5);}
+function inspsOf(ins,tid){return ins.filter(i=>i.tankId===tid||i.tag===tid).slice().sort((a,b)=>(new Date(a.fecha).getTime()||0)-(new Date(b.fecha).getTime()||0));}
+function trendSvg(data){
+  if(!data||data.length<2)return'<div class="nohist">Histórico insuficiente (se requiere al menos 2 inspecciones)</div>';
+  var w=540,h=104,pad=12,pts=[],i,j,k,m,g,gy,step;
+  for(i=0;i<data.length;i++)pts.push({x:pad+i*((w-pad*2)/(data.length-1)),y:h-pad-((data[i].score||0)/100)*(h-pad*2),f:data[i].f});
+  var line="";
+  for(j=0;j<pts.length;j++)line+=(j?" ":"")+pts[j].x.toFixed(1)+","+pts[j].y.toFixed(1);
+  var area=pad+","+(h-pad)+" "+line+" "+pts[pts.length-1].x.toFixed(1)+","+(h-pad);
+  var ink=lv(data[data.length-1].score).c;
+  var s='<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="display:block;border:1px solid #cbd5e1;border-radius:6px;background:#fff">';
+  for(g=0;g<=100;g+=25){gy=h-pad-(g/100)*(h-pad*2);s+='<line x1="'+pad+'" y1="'+gy.toFixed(1)+'" x2="'+(w-pad)+'" y2="'+gy.toFixed(1)+'" stroke="#e2e8f0" stroke-width="1"/><text x="1" y="'+(gy+3).toFixed(1)+'" font-size="7" fill="#94a3b8">'+g+'</text>';}
+  s+='<polygon points="'+area+'" fill="'+ink+'" opacity="0.09"/>';
+  s+='<polyline points="'+line+'" fill="none" stroke="'+ink+'" stroke-width="2" stroke-linejoin="round"/>';
+  for(k=0;k<pts.length;k++)s+='<circle cx="'+pts[k].x.toFixed(1)+'" cy="'+pts[k].y.toFixed(1)+'" r="2.4" fill="'+ink+'"/>';
+  step=Math.ceil(data.length/8);
+  for(m=0;m<pts.length;m++){if(m%step===0||m===pts.length-1)s+='<text x="'+pts[m].x.toFixed(1)+'" y="'+(h-2)+'" font-size="7" fill="#64748b" text-anchor="middle">'+esc(pts[m].f)+'</text>';}
+  return s+'</svg>';
+}
+function printFleetReport(){
+  var tanks=S.tanks,inspections=S.inspections;
+  if(!tanks.length){showToast("No hay tanques registrados.","#f59e0b");return;}
+  var insts=[].concat(Array.from(new Set(tanks.map(function(t){return t.instalacion;})))).sort();
+  var rows=insts.map(function(name){
+    var ts=tanks.filter(function(t){return t.instalacion===name;});
+    var ids=new Set(ts.map(function(t){return t.id;}));
+    var ins=inspections.filter(function(i){return ids.has(i.tankId||i.tag);});
+    var scored=ts.map(function(t){var l=inspsOf(ins,t.id);return l.length?l[l.length-1].score:null;}).filter(function(v){return v!==null&&v!==undefined;});
+    var dias=ts.map(function(t){var l=inspsOf(ins,t.id);return l.length?dsSafe(l[l.length-1].fecha):null;}).filter(function(v){return v!==null;});
+    return{name:name,ts:ts,ins:ins,scored:scored,
+      avg:scored.length?Math.round(scored.reduce(function(a,v){return a+v;},0)/scored.length):null,
+      crit:scored.filter(function(v){return v<60;}).length,
+      sin:ts.length-scored.length,
+      nc:ins.reduce(function(a,i){return a+(i.nc||0);},0),
+      maxDias:dias.length?Math.max.apply(null,dias):null};
+  });
+  var allSc=tanks.map(function(t){var l=inspsOf(inspections,t.id);return l.length?l[l.length-1].score:null;}).filter(function(v){return v!==null;});
+  var gAvg=allSc.length?Math.round(allSc.reduce(function(a,v){return a+v;},0)/allSc.length):0;
+  var totNC=inspections.reduce(function(a,i){return a+(i.nc||0);},0);
+  var fechas=inspections.map(function(i){return i.fecha;}).filter(Boolean).sort();
+  var now=new Date();
+  var w=window.open("","_blank","width=1000,height=760");
+  if(!w){showToast("El navegador bloqueó la ventana de impresión. Permite los pop-ups.","#ef4444");return;}
+  var TH=function(h){return'<th style="font-size:8px;color:#475569;letter-spacing:.6px;text-align:left;padding:"5px 6px;border-bottom:1px solid #cbd5e1;background:#f1f5f9">'+h+'</th>';};
+  var TD=function(v,c,st){return'<td style="font-size:8.5px;color:'+(c||"#334155")+';padding:"4px 6px";border-bottom:1px solid #e2e8f0;'+(st||"")+'">'+v+'</td>';};
+  var html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>DESIAHO - Informe de Flota</title><style>'+
+    '*{margin:0;padding:0;box-sizing:border-box}'+
+    'body{font-family:"Segoe UI",Arial,sans-serif;color:#0f172a;padding:0 30px 30px;font-size:11px;line-height:1.45}'+
+    '@page{size:A4 portrait;margin:14mm 12mm}'+
+    '.hd{display:flex;align-items:center;gap:10px;border-bottom:3px solid #0f172a;padding-bottom:8px;margin-bottom:10px}'+
+    '.hd .e{font-size:16px;font-weight:900;letter-spacing:2px}'+
+    '.hd .s{font-size:7px;color:#64748b;letter-spacing:1px}'+
+    '.hd .r{text-align:right;font-size:8px;color:#334155;margin-left:auto}'+
+    '.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}'+
+    '.kpis>div{border:1px solid #cbd5e1;border-radius:6px;padding:"8px 4px";text-align:center;border-top-width:3px;border-top-style:solid}'+
+    '.kpis .v{font-size:20px;font-weight:900;line-height:1}'+
+    '.kpis .l{font-size:6.5px;color:#64748b;letter-spacing:.6px;margin-top:3px}'+
+    '.st{font-size:10px;font-weight:900;letter-spacing:1px;margin:16px 0 6px;border-bottom:2px solid #0f172a;padding-bottom:3px}'+
+    'table.t{width:100%;border-collapse:collapse;margin-bottom:6px;break-inside:avoid;page-break-inside:avoid}'+
+    'table.t td{font-size:8.5px;padding:"4px 6px";border-bottom:1px solid #e2e8f0}'+
+    '.card{border:1px solid #cbd5e1;border-radius:7px;padding:10px;margin-bottom:9px;break-inside:avoid;page-break-inside:avoid}'+
+    '.card .ch{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:7px}'+
+    '.card .t1{font-size:13px;font-weight:900}'+
+    '.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:7px}'+
+    '.mini>div{background:#f8fafc;border-radius:5px;padding:"5px 3px";text-align:center}'+
+    '.mini .v{font-size:13px;font-weight:900;line-height:1}'+
+    '.mini .l{font-size:6px;color:#64748b;letter-spacing:.5px;margin-top:2px}'+
+    '.lbl{font-size:7px;font-weight:800;color:#475569;letter-spacing:.8px;margin:0 0 3px}'+
+    '.nohist{font-size:8px;color:#94a3b8;font-style:italic;border:1px dashed #cbd5e1;border-radius:6px;padding:"13px 6px";text-align:center}'+
+    '.fc{font-size:7.5px;padding:"2px 4px 2px 0";border-bottom:1px solid #f1f5f9;vertical-align:top;width:46px;color:#64748b;font-weight:700}'+
+    '.ft{font-size:7.5px;padding:"2px 0 2px 4px";border-bottom:1px solid #f1f5f9;width:92px;text-align:right;white-space:nowrap;color:#64748b}'+
+    '.fb{font-size:7.5px;color:#334155;padding:"2px 4px";border-bottom:1px solid #f1f5f9}'+
+    '.more{font-size:7px;color:#94a3b8;margin-top:3px}'+
+    '.ok{font-size:8px;color:#16a34a;font-weight:700;margin-top:6px}'+
+    '.wr{font-size:8px;color:#f59e0b;font-weight:700;margin-top:6px}'+
+    '.nhi{font-size:7px;font-weight:800;color:#b91c1c;letter-spacing:.8px;margin:8px 0 3px}'+
+    '.pg{break-before:page;page-break-before:always}'+
+    '.ft2{text-align:center;font-size:7px;color:#94a3b8;border-top:1px solid #cbd5e1;padding-top:10px;margin-top:14px}'+
+    '.sg{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:22px}'+
+    '.sg>div{text-align:center;padding-top:22px;border-top:1px solid #94a3b8;font-size:9px;color:#475569}'+
+    '@media print{body{padding:0}}'+
+    '</style></head><body>';
+  html+='<div class="hd"><div style="font-size:22px">⬡</div><div><div class="e">DESIAHO</div><div class="s">SISTEMA INTEGRAL DE RIESGOS — INFORME DE FLOTA DE TANQUES ATMOSFÉRICOS (TECHO CÓNICO)</div></div>'+
+    '<div class="r">Emitido: '+esc(now.toLocaleString("es-ES"))+'<br>'+tanks.length+' tanques · '+inspections.length+' inspecciones<br>'+
+    (fechas.length?"Período: "+esc(fechas[0])+" — "+esc(fechas[fechas.length-1]):"Sin inspecciones registradas")+'</div></div>';
+  html+='<div class="kpis">'+
+    '<div style="border-top-color:'+lv(gAvg).c+'"><div class="v" style="color:'+lv(gAvg).c+'">'+gAvg+'%</div><div class="l">SCORE PROMEDIO</div></div>'+
+    '<div style="border-top-color:#3b82f6"><div class="v" style="color:#3b82f6">'+inspections.length+'</div><div class="l">INSPECCIONES</div></div>'+
+    '<div style="border-top-color:#ef4444"><div class="v" style="color:#ef4444">'+allSc.filter(function(v){return v<60;}).length+'</div><div class="l">TANQUES CRÍTICOS</div></div>'+
+    '<div style="border-top-color:'+(totNC>10?"#ef4444":"#f59e0b")+'"><div class="v" style="color:'+(totNC>10?"#ef4444":"#f59e0b")+'">'+totNC+'</div><div class="l">NC TOTALES</div></div>'+
+    '<div style="border-top-color:#64748b"><div class="v" style="color:#64748b">'+tanks.length+'</div><div class="l">TANQUES EN FLOTA</div></div></div>';
+  html+='<div class="st">1. RESUMEN POR INSTALACIÓN</div><table class="t"><tr>'+TH("INSTALACIÓN")+TH("TANQUES")+TH("INSP.")+TH("SCORE PROM.")+TH("CRÍTICOS")+TH("SIN INSP.")+TH("NC TOTAL")+TH("DÍAS MÁX.")+'</tr>';
+  rows.forEach(function(r){
+    html+='<tr>'+TD(esc(r.name),null,'font-weight:800')+TD(r.ts.length)+TD(r.ins.length)+
+      TD(r.avg!==null?r.avg+"%":"—",r.avg!==null?lv(r.avg).c:"#64748b",'font-weight:800;text-align:center')+
+      TD(r.crit,r.crit>0?"#ef4444":"#16a34a",'font-weight:700;text-align:center')+
+      TD(r.sin,r.sin>0?"#f59e0b":"#334155",'text-align:center')+
+      TD(r.nc,r.nc>0?"#ef4444":"#334155",'font-weight:700;text-align:center')+
+      TD(r.maxDias!==null?r.maxDias+"d":"—",r.maxDias!==null&&r.maxDias>180?"#ef4444":"#334155",'text-align:center')+'</tr>';
+  });
+  html+='</table>';
+  rows.forEach(function(r,ri){
+    html+='<div class="st">'+(2+ri)+'. INSTALACIÓN '+esc(r.name.toUpperCase())+'</div><table class="t"><tr>'+TH("TAG")+TH("PRODUCTO")+TH("CAPACIDAD")+TH("CUSTODIO")+TH("NIVEL")+TH("SCORE")+TH("NC")+TH("CP")+TH("ÚLT. INSP.")+TH("DÍAS")+'</tr>';
+    r.ts.forEach(function(t){
+      var l=inspsOf(r.ins,t.id),last=l.length?l[l.length-1]:null;
+      var slv=last?lv(last.score):{l:"Sin inspección",c:"#64748b"};
+      var d=last?dsSafe(last.fecha):null;
+      var dc=d===null?"#64748b":d>180?"#ef4444":d>120?"#f59e0b":"#16a34a";
+      html+='<tr>'+TD(esc(t.id),null,'font-weight:800')+TD(esc(t.producto||"—"))+
+        TD(t.capacidad?Number(t.capacidad).toLocaleString("es-ES")+" m³":"—")+
+        TD(esc(t.custodio||"—"))+
+        TD(esc(slv.l),slv.c,'font-weight:700')+
+        TD(last?last.score+"%":"—",slv.c,'font-weight:900;font-size:10px;text-align:center')+
+        TD(last&&last.nc>0?last.nc:"—",last&&last.nc>0?"#ef4444":"#334155",'font-weight:700;text-align:center')+
+        TD(last&&last.cp>0?last.cp:"—",last&&last.cp>0?"#f59e0b":"#334155",'font-weight:700;text-align:center')+
+        TD(last?esc(last.fecha):"Nunca")+TD(d!==null?d+"d":"—",dc,'font-weight:700;text-align:center')+'</tr>';
+    });
+    html+='</table>';
+  });
+  html+='<div class="pg"></div><div class="st">3. DETALLE POR TANQUE</div>';
+  tanks.forEach(function(t){
+    var l=inspsOf(inspections,t.id),last=l.length?l[l.length-1]:null;
+    var slv=last?lv(last.score):{l:"Sin inspección",c:"#64748b"};
+    var trend=l.slice(-12).map(function(i){return{f:String(i.fecha||"—").slice(5),score:i.score};});
+    var ncAll=inspections.filter(function(i){return (i.tankId||i.tag)===t.id;}).reduce(function(acc,i){
+      (i.hallazgos||[]).forEach(function(h){if(h.tipo==="NC")acc.push({id:h.id,txt:h.txt,fecha:i.fecha,auditor:i.auditor,score:i.score});});
+      return acc;
+    },[]);
+    var shown=ncAll.slice(0,8);
+    var dd=last?dsSafe(last.fecha):null;
+    html+='<div class="card"><div class="ch"><div><div class="t1">'+esc(t.id)+' <span style="font-size:9px;font-weight:600;color:#475569">'+esc(t.instalacion)+'</span></div>'+
+      '<div style="font-size:8px;color:#475569">'+esc(t.producto)+' · '+(t.capacidad?Number(t.capacidad).toLocaleString("es-ES"):"—")+' m³ · '+esc(t.custodio||"—")+'</div></div>'+
+      '<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:'+slv.c+';line-height:1">'+(last?last.score+"%":"—")+'</div>'+
+      '<div style="font-size:7px;font-weight:800;color:'+slv.c+';letter-spacing:.5px">'+esc(slv.l)+'</div></div></div>';
+    html+='<div class="mini">'+
+      '<div><div class="v" style="color:#3b82f6">'+l.length+'</div><div class="l">INSPECCIONES</div></div>'+
+      '<div><div class="v" style="color:'+(last&&last.nc>0?"#ef4444":"#16a34a")+'">'+(last?last.nc:"—")+'</div><div class="l">NC ÚLTIMA</div></div>'+
+      '<div><div class="v" style="color:'+(last&&last.cp>0?"#f59e0b":"#16a34a")+'">'+(last?last.cp:"—")+'</div><div class="l">CP ÚLTIMA</div></div>'+
+      '<div><div class="v" style="color:'+((dd||0)>180?"#ef4444":"#64748b")+'">'+(dd!==null?dd+"d":"—")+'</div><div class="l">DÍAS</div></div></div>';
+    html+='<div class="lbl">TENDENCIA DE PUNTAJE (ÚLTIMAS '+trend.length+' INSPECCIONES)</div>'+trendSvg(trend);
+    if(shown.length>0){
+      html+='<div class="nhi">HALLAZGOS NO CONFORME ('+ncAll.length+')</div><table class="t" style="margin-bottom:0"><tbody>';
+      shown.forEach(function(h){html+='<tr><td class="fc">'+esc(h.id)+'</td><td class="fb">'+esc(h.txt)+'</td><td class="ft">'+esc(h.fecha)+' · '+esc(h.auditor)+'</td></tr>';});
+      html+='</tbody></table>';
+      if(ncAll.length>shown.length)html+='<div class="more">… y '+(ncAll.length-shown.length)+' hallazgo(s) adicional(es) no detallado(s) en esta sección.</div>';
+    }else if(l.length>0){
+      html+='<div class="ok">Sin hallazgos no conformes registrados.</div>';
+    }else{
+      html+='<div class="wr">Tanque sin inspecciones registradas.</div>';
+    }
+    html+='</div>';
+  });
+  html+='<div class="ft2">DESIAHO v1.0 — Sistema Integral de Riesgos — API 650/653/2000 · NFPA 11/30/780 · IEC 61511 · NACE SP0169'+
+    '<div class="sg"><div>FIRMA DEL RESPONSABLE DE INSPECCIÓN</div><div>FIRMA DEL SUPERVISOR / GERENTE</div></div></div>';
+  html+='</body></html>';
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){w.focus();w.print();},400);
+}
+// Init
+(function init(){
+  loadData();
+  try{S.light=localStorage.getItem("desiaho-light")==="1";}catch(e){S.light=false;}
+  applyTheme();
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").catch(function(e){console.warn("[SW] no registrado:",e);});
+  }
+  const params=new URLSearchParams(window.location.search);
+  const hash=location.hash.replace("#","");
+  if(params.get("admin")==="1"){S.auth="admin";S.page="admin";render();return;}
+  if(hash==="campo"||hash==="tecnico"){S.role="inspector";S.page="login";render();return;}
+  S.page="home";render();
+})();
+</script>
+</body>
+</html>

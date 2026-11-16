@@ -1,0 +1,46 @@
+# DESIAHO — Sistema Integral de Riesgos
+
+**Inspección y Gestión de Tanques Atmosféricos de Techo Cónico**
+
+PWA ( Progressive Web App ) que funciona **con y sin conexión a internet**: instalable en dispositivos móviles y escritorio, con modo offline garantizado por un Service Worker.
+
+## 🚀 Uso
+
+Abrir `desiaho.html` en el navegador, o usar la versión publicada en GitHub Pages.
+
+| Ruta | Acceso |
+|---|---|
+| `desiaho.html` | Inicio de la app |
+| `desiaho.html#campo` | Inspección de campo (una pregunta a la vez) |
+| `desiaho.html#tecnico` | Formulario técnico completo |
+| `desiaho.html?admin=1` | Panel de administración |
+
+## 📋 Contenido técnico
+
+- **63 preguntas** de inspección organizadas en 8 secciones (Base/Fundación, Cuerpo, Accesorios, Techo Cónico, Contra Incendio, Venteo, Puesta a Tierra, Protección Catódica)
+- Cálculo de riesgo ponderado con barreras Preventivas (×0.7) y de Mitigación (×0.3)
+- Niveles: EXCELENTE → DEFICIENTE con acción correctiva sugerida
+- Captura de fotos, notas y dictado por voz (SpeechRecognition)
+- Reporte imprimible con firma
+- Estándares: API 650/653/2000 · NFPA 11/30/780 · IEC 61511 · NACE SP0169
+
+## 🏗️ Estructura
+
+```
+├── desiaho.html           # App principal (HTML + CSS + JS autocontenido)
+├── sw.js                  # Service Worker (offline, estrategia de caché)
+├── manifest.webmanifest   # Manifiesto PWA (instalación, iconos, shortcuts)
+├── desiaho_system.jsx     # Versión anterior en React (referencia)
+├── icon-192.png           # Icono 192×192
+├── icon-512.png           # Icono 512×512 (any + maskable)
+└── apple-touch-icon.png   # Icono iOS
+```
+
+## 💾 Persistencia
+
+Los datos de inspección se guardan en `localStorage` del dispositivo (no se envían a ningún servidor).
+
+## 📦 Instalación como app
+
+En Chrome/Android: botón **"⬇ Instalar DESIAHO"** en el inicio.
+En iOS/Safari: Compartir → **Agregar a pantalla de inicio**.
