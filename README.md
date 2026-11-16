@@ -44,3 +44,42 @@ Los datos de inspección se guardan en `localStorage` del dispositivo (no se env
 
 En Chrome/Android: botón **"⬇ Instalar DESIAHO"** en el inicio.
 En iOS/Safari: Compartir → **Agregar a pantalla de inicio**.
+
+## 💾 Datos: almacenamiento, respaldo y nube
+
+| Dato | Dónde se guarda |
+|---|---|
+| Tanques | `localStorage["desiaho-tanks"]` |
+| Inspecciones | `localStorage["desiaho-insps"]` |
+| Fotos | IndexedDB `desiaho-db` (redimensionadas a 1280px JPEG) |
+| Sesión (si hay nube) | Firebase Auth (persiste al recargar) |
+
+### 📥 Exportar / Importar backup
+**Panel Admin → ☁ Datos → 📦 Exportar backup** genera un `.json` con tanques, inspecciones y fotos. **📥 Importar backup** fusiona sin duplicados (gana el que ya existe localmente). El archivo sirve para migrar entre dispositivos o como copia de seguridad ante fallos del navegador.
+
+### ☁️ Sincronización con Firebase (opcional)
+La app funciona 100% offline por defecto. Para compartir datos entre dispositivos/usuarios:
+
+1. Crea el proyecto en [console.firebase.google.com](https://console.firebase.google.com)
+2. **Authentication → Get started → Email/Password → habilitar**
+3. **Firestore Database → Create database** (modo *production*) y publica estas reglas:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /{doc=**} {
+         allow read, write: if request.auth != null;
+       }
+     }
+   }
+   ```
+4. **Project settings → Your apps → Web app** → copia el objeto `config` (JSON)
+5. En la app: **Panel Admin → ☁ Datos → pega el JSON → ✔ Guardar configuración** (recarga sola)
+
+Una vez conectado:
+- El login pasa a ser **email + contraseña** (las cuentas nuevas inician como *Inspector*)
+- Un admin puede ascender/descender usuarios desde **☁ Datos → 👥 Usuarios**
+- Los datos se suben al guardar y se bajan con **↻ Sincronizar con la nube ahora** (también al iniciar sesión)
+- Las **fotos se guardan localmente y en el backup**; no se sincronizan a la nube en esta versión
+
+> ⚠️ La ruta `?admin=1` (modo demo) queda deshabilitada cuando la nube está configurada.

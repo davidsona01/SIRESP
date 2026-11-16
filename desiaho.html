@@ -97,6 +97,22 @@ canvas.chart{width:100%;height:100%;display:block}
 .ld{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:8px}
 .ld-ic{font-size:48px}.ld-l{color:#f59e0b;font-size:14px;font-weight:700}
 @media(max-width:480px){.tl{gap:6px}.g2{grid-template-columns:1fr}.g4{grid-template-columns:1fr}}
+/* Lightbox de fotos */
+.lb{position:fixed;inset:0;background:rgba(3,7,15,.96);z-index:4000;display:flex;flex-direction:column}
+.lb-h{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1e293b;color:#e2e8f0;font-size:13px;font-weight:700}
+.lb-x{background:transparent;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
+.lb-b{flex:1;overflow:auto;display:flex;flex-wrap:wrap;gap:12px;padding:16px;align-content:flex-start;justify-content:center}
+.lb-i{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:8px;max-width:100%}
+.lb-i img{display:block;max-width:min(92vw,760px);max-height:70vh;border-radius:8px;cursor:zoom-in}
+.lb-i div{font-size:10px;color:#94a3b8;margin-top:6px;text-align:center}
+/* Acceso Firebase (email/contraseña) */
+.fba-i{width:100%;background:var(--bg2);border:2px solid var(--bord);border-radius:10px;color:var(--tx1);font-size:14px;padding:12px;margin-bottom:10px;box-sizing:border-box}
+.fba-i:focus{border-color:#3b82f6}
+.fba-e{font-size:12px;color:#ef4444;font-weight:700;min-height:8px;margin-bottom:6px}
+/* Chips y usuarios */
+.ph-chip{display:inline-block;background:var(--bg2);border:1px solid var(--bord);border-radius:12px;color:var(--sub);font-size:10px;font-weight:700;padding:3px 9px;cursor:pointer}
+.ph-chip:hover{border-color:#3b82f6;color:#60a5fa}
+.urole{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--bg2);border:1px solid var(--bord);border-radius:10px;margin-bottom:6px;font-size:12px}
 </style>
 </head>
 <body>
@@ -187,6 +203,8 @@ campo:{phase:"sel",tankId:null,auditor:"",idx:0,answers:{},notes:{},photos:{},sh
 tecnico:{phase:"sel",tankId:null,auditor:"",fecha:"",answers:{},notes:{},saving:false,open:{1:true}},
 admin:{view:"ov",selTank:null,selInsp:null,addTank:false,filt:"Todas",newTank:{id:"",instalacion:"",producto:"",capacidad:"",custodio:""}}};
 S.installable=false;S.deferredPrompt=null;
+S.fbAuth={mode:"login",email:"",pass:"",busy:false,err:""};
+S.admin.cloud=false;S.admin.cloudCfg="";S.admin.users=[];
 window.addEventListener("online",function(){var p=document.getElementById("netpill");if(p){p.className="netpill";p.innerHTML='<span class="netdot"></span>ONLINE';}showToast("Conexión restablecida. Los datos se guardan en este dispositivo.","#22c55e");});
 window.addEventListener("offline",function(){var p=document.getElementById("netpill");if(p){p.className="netpill off";p.innerHTML='<span class="netdot"></span>OFFLINE';}showToast("Sin conexión. DESIAHO sigue funcionando con los datos guardados.","#f59e0b");});
 window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();S.deferredPrompt=e;S.installable=true;if(S.page==="home")render();});
@@ -195,7 +213,286 @@ function promptInstall(){if(!S.deferredPrompt)return;S.deferredPrompt.prompt();S
 // Storage
 function loadData(){try{const t=localStorage.getItem("desiaho-tanks");S.tanks=t?JSON.parse(t):DT.map(t=>({...t}));const i=localStorage.getItem("desiaho-insps");S.inspections=i?JSON.parse(i):[];}catch(e){S.tanks=DT.map(t=>({...t}));S.inspections=[];}}
 function saveTanksToLS(){try{localStorage.setItem("desiaho-tanks",JSON.stringify(S.tanks));}catch(e){}}
-function saveInspToLS(insp){try{S.inspections.push(insp);localStorage.setItem("desiaho-insps",JSON.stringify(S.inspections));}catch(e){}}
+function saveInspsToLS(){try{localStorage.setItem("desiaho-insps",JSON.stringify(S.inspections));}catch(e){}}
+function saveInspToLS(insp){try{S.inspections.push(insp);saveInspsToLS();}catch(e){}}
+// === IndexedDB: persistencia de fotos (mejora #2) ===
+let _idbP=null;
+function idbOpen(){
+  if(_idbP)return _idbP;
+  _idbP=new Promise(function(res,rej){
+    if(!window.indexedDB){rej(new Error("IndexedDB no disponible"));return;}
+    const rq=indexedDB.open("desiaho-db",1);
+    rq.onupgradeneeded=function(e){const db=e.target.result;if(!db.objectStoreNames.contains("photos"))db.createObjectStore("photos",{keyPath:"key"});};
+    rq.onsuccess=function(e){const db=e.target.result;db.onversionchange=function(){db.close();_idbP=null;};res(db);};
+    rq.onerror=function(e){_idbP=null;rej(e);};
+  });
+  return _idbP;
+}
+async function idbPutMany(rows){
+  const db=await idbOpen();
+  return new Promise(function(res,rej){const tx=db.transaction("photos","readwrite");const st=tx.objectStore("photos");rows.forEach(function(r){st.put({key:r.key,images:r.images});});tx.oncomplete=function(){res(true);};tx.onerror=function(e){rej(e);};});
+}
+async function idbGet(key){
+  const db=await idbOpen();
+  return new Promise(function(res,rej){const rq=db.transaction("photos").objectStore("photos").get(key);rq.onsuccess=function(){res(rq.result?rq.result.images:[]);};rq.onerror=function(e){rej(e);};});
+}
+async function idbAll(){
+  const db=await idbOpen();
+  return new Promise(function(res,rej){const rq=db.transaction("photos").objectStore("photos").getAll();rq.onsuccess=function(){res(rq.result||[]);};rq.onerror=function(e){rej(e);};});
+}
+// Redimensiona fotos antes de guardar (menos espacio, compatible l\u00edmites)
+function downscaleImage(file,maxDim,quality){
+  maxDim=maxDim||1280;quality=quality||0.72;
+  return new Promise(function(res,rej){
+    const fr=new FileReader();
+    fr.onerror=function(){rej(new Error("No se pudo leer la imagen"));};
+    fr.onload=function(){
+      const img=new Image();
+      img.onerror=function(){res(fr.result);};
+      img.onload=function(){
+        try{
+          let w=img.width,h=img.height;
+          if(Math.max(w,h)>maxDim){const k=maxDim/Math.max(w,h);w=Math.round(w*k);h=Math.round(h*k);}
+          const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+          cv.getContext("2d").drawImage(img,0,0,w,h);
+          res(cv.toDataURL("image/jpeg",quality));
+        }catch(err){res(fr.result);}
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+// Visor de fotos (lightbox)
+function openLightbox(items){
+  closeLightbox();
+  const lb=document.createElement("div");lb.className="lb";lb.id="lightbox";
+  lb.innerHTML='<div class="lb-h"><span>\uD83D\uDCF7 '+items.length+' foto'+(items.length===1?"":"s")+'</span><button class="lb-x" onclick="closeLightbox()">&#10005; Cerrar</button></div>'+
+    '<div class="lb-b">'+items.map(function(it){return'<div class="lb-i"><img src="'+it.src+'" alt=""><div>'+it.label+'</div></div>';}).join("")+'</div>';
+  lb.addEventListener("click",function(e){if(e.target===lb)closeLightbox();});
+  document.body.appendChild(lb);
+}
+function closeLightbox(){const lb=document.getElementById("lightbox");if(lb)lb.remove();}
+function showPhotos(inspId,qid){
+  const get=inspId?idbGet(inspId+"|"+qid):Promise.resolve(S.campo.photos[qid]||[]);
+  get.then(function(imgs){
+    if(!imgs||!imgs.length){showToast("Sin fotos registradas.","#f59e0b");return;}
+    openLightbox(imgs.map(function(src,i){return{src:src,label:qid+" \u00b7 foto "+(i+1)};}));
+  }).catch(function(){showToast("No se pudieron cargar las fotos.","#ef4444");});
+}
+function showInspPhotos(insp){
+  const qids=insp.photoQids||[];
+  if(!qids.length){showToast("Esta inspecci\u00f3n no tiene fotos.","#f59e0b");return;}
+  Promise.all(qids.map(function(qid){return idbGet(insp.id+"|"+qid).then(function(imgs){return imgs.map(function(src){return{src:src,label:qid};});});}))
+  .then(function(arr){
+    const flat=[].concat.apply([],arr);
+    if(!flat.length){showToast("Fotos no disponibles en este dispositivo (usa el backup para moverlas).","#f59e0b");return;}
+    openLightbox(flat);
+  }).catch(function(){showToast("No se pudieron cargar las fotos.","#ef4444");});
+}
+// === Backup exportar/importar (mejora #1) ===
+async function exportBackup(){
+  try{
+    const photos=await idbAll().catch(function(){return[];});
+    const data={app:"desiaho",version:1,exportedAt:new Date().toISOString(),tanks:S.tanks,inspections:S.inspections,photos:photos};
+    const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="desiaho-backup-"+new Date().toISOString().slice(0,10)+".json";
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+    showToast("\u2714 Backup exportado: "+S.tanks.length+" tanques, "+S.inspections.length+" inspecciones, "+photos.length+" registros de fotos.","#22c55e");
+  }catch(e){showToast("Error al exportar: "+e.message,"#ef4444");}
+}
+function importBackup(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const fr=new FileReader();
+  fr.onload=function(){
+    try{
+      const d=JSON.parse(fr.result);
+      if(!d||d.app!=="desiaho"||!Array.isArray(d.tanks)||!Array.isArray(d.inspections)){showToast("Archivo no v\u00e1lido: no es un backup DESIAHO.","#ef4444");return;}
+      let nt=0,ni=0;
+      d.tanks.forEach(function(t){if(t&&t.id&&!S.tanks.some(function(x){return x.id===t.id;})){S.tanks.push(t);nt++;}});
+      d.inspections.forEach(function(i){if(i&&i.id&&!S.inspections.some(function(x){return x.id===i.id;})){S.inspections.push(i);ni++;}});
+      saveTanksToLS();saveInspsToLS();
+      const ph=Array.isArray(d.photos)?d.photos.filter(function(r){return r&&r.key&&Array.isArray(r.images);}):[];
+      const done=function(){render();showToast("\u2714 Importado: "+nt+" tanques, "+ni+" inspecciones, "+ph.length+" registros de fotos.","#22c55e");};
+      if(ph.length){idbPutMany(ph).then(done).catch(function(){render();showToast("\u2714 Datos importados (las fotos no se pudieron guardar).","#f59e0b");});}
+      else done();
+    }catch(e){showToast("Error al importar: "+e.message,"#ef4444");}
+  };
+  fr.readAsText(f);
+  inp.value="";
+}
+// === Firebase: nube + usuarios reales (mejora #3) ===
+const FB_V="10.12.5";
+const FB={app:null,auth:null,db:null,fs:null,au:null,ready:false,loading:null,user:null,email:null,_sync:null};
+function fbConfig(){try{const c=localStorage.getItem("desiaho-fb-config");return c?JSON.parse(c):null;}catch(e){return null;}}
+function fbEnabled(){const c=fbConfig();return !!(c&&c.apiKey&&c.projectId);}
+function fbLoad(){
+  if(FB.ready)return Promise.resolve(FB);
+  if(FB.loading)return FB.loading;
+  FB.loading=(async function(){
+    const cfg=fbConfig();
+    if(!cfg||!cfg.apiKey)throw new Error("Sin configuraci\u00f3n de Firebase");
+    const mod=await Promise.all([
+      import("https://www.gstatic.com/firebasejs/"+FB_V+"/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/"+FB_V+"/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/"+FB_V+"/firebase-firestore.js")
+    ]);
+    try{FB.app=mod[0].getApp("desiaho");}catch(e){FB.app=mod[0].initializeApp(cfg,"desiaho");}
+    FB.au=mod[1];FB.auth=mod[1].getAuth(FB.app);
+    FB.fs=mod[2];FB.db=mod[2].getFirestore(FB.app);
+    FB.ready=true;
+    return FB;
+  })().catch(function(e){FB.loading=null;throw e;});
+  return FB.loading;
+}
+function fbErrMsg(e){
+  const c=e&&e.code?e.code:"";
+  if(c==="auth/invalid-email")return "Email inv\u00e1lido.";
+  if(c==="auth/missing-password")return "Ingresa la contrase\u00f1a.";
+  if(c==="auth/user-not-found")return "No existe ese usuario. Crea la cuenta.";
+  if(c==="auth/wrong-password"||c==="auth/invalid-credential")return "Contrase\u00f1a incorrecta.";
+  if(c==="auth/email-already-in-use")return "Ese email ya est\u00e1 registrado. Inicia sesi\u00f3n.";
+  if(c==="auth/weak-password")return "La contrase\u00f1a debe tener 6+ caracteres.";
+  if(c==="auth/too-many-requests")return "Demasiados intentos. Espera un momento.";
+  if(c==="auth/network-request-failed")return "Sin conexi\u00f3n con Firebase.";
+  if(c.indexOf("api-key-not-valid")>=0)return "Configuraci\u00f3n de Firebase inv\u00e1lida (apiKey). Revisa el JSON en Panel Admin \u2192 \u2601 Datos.";
+  return (e&&e.message)?e.message:"Error de autenticaci\u00f3n.";
+}
+async function fbLogin(){
+  const a=S.fbAuth;if(a.busy)return;
+  a.email=(a.email||"").trim();
+  if(!a.email||!a.pass){a.err="Ingresa email y contrase\u00f1a.";render();return;}
+  a.busy=true;a.err="";render();
+  try{
+    const F=await fbLoad();
+    let cred;
+    if(a.mode==="register"){
+      try{cred=await F.au.createUserWithEmailAndPassword(F.auth,a.email,a.pass);}
+      catch(e){if(e.code==="auth/email-already-in-use"){cred=await F.au.signInWithEmailAndPassword(F.auth,a.email,a.pass);}else throw e;}
+    }else{
+      try{cred=await F.au.signInWithEmailAndPassword(F.auth,a.email,a.pass);}
+      catch(e){if(e.code==="auth/user-not-found"){a.busy=false;a.err="No existe ese email. Pulsa \u00abCrear cuenta\u00bb.";render();return;}throw e;}
+    }
+    await fbAfterLogin(cred.user);
+  }catch(e){
+    a.busy=false;a.err=fbErrMsg(e);render();
+  }
+}
+async function fbAfterLogin(user){
+  try{
+    const F=await fbLoad();
+    const uref=F.fs.doc(F.db,"users/"+user.uid);
+    const snap=await F.fs.getDoc(uref);
+    let role="inspector";
+    if(!snap.exists()){
+      await F.fs.setDoc(uref,{email:user.email,role:"inspector",createdAt:Date.now(),updatedAt:Date.now()});
+    }else{role=snap.data().role||"inspector";}
+    S.auth=role;S.fbUser=user.uid;S.fbEmail=user.email;
+    FB.user=user;FB.email=user.email;
+    S.fbAuth.busy=false;S.fbAuth.err="";S.fbAuth.pass="";
+    showToast("\u2714 Sesi\u00f3n iniciada: "+user.email+" ("+role+")","#22c55e");
+    if(role==="admin"&&S.role==="admin")go("admin");else go("home");
+    fbSync(true).catch(function(){});
+  }catch(e){
+    S.fbAuth.busy=false;S.fbAuth.err=fbErrMsg(e);render();
+  }
+}
+async function fbPushInsp(insp){
+  if(!fbEnabled()||!FB.ready||!FB.user||!navigator.onLine)return;
+  try{await FB.fs.setDoc(FB.fs.doc(FB.db,"inspections/"+insp.id),Object.assign({},insp,{updatedAt:Date.now(),by:S.fbEmail||""}));}
+  catch(e){console.warn("[FB] push insp:",e);}
+}
+async function fbPushTank(t){
+  if(!fbEnabled()||!FB.ready||!FB.user||!navigator.onLine)return;
+  try{await FB.fs.setDoc(FB.fs.doc(FB.db,"tanks/"+t.id),Object.assign({},t,{updatedAt:Date.now()}));}
+  catch(e){console.warn("[FB] push tank:",e);}
+}
+async function fbSync(silent){
+  if(!fbEnabled())throw new Error("Firebase no est\u00e1 configurado");
+  if(FB._sync)return FB._sync;
+  FB._sync=(async function(){
+    const F=await fbLoad();
+    if(!F.user)throw new Error("Inicia sesi\u00f3n en la nube primero (Panel Admin \u2192 \u2601 Datos)");
+    // 1) Subir locales (datos apendices: tanques e inspecciones nunca se editan)
+    const up=[];
+    S.tanks.forEach(function(t){up.push(FB.fs.setDoc(FB.fs.doc(FB.db,"tanks/"+t.id),Object.assign({},t,{updatedAt:t.updatedAt||Date.now()})));});
+    S.inspections.forEach(function(i){up.push(FB.fs.setDoc(FB.fs.doc(FB.db,"inspections/"+i.id),Object.assign({},i,{updatedAt:i.updatedAt||Date.now()})));});
+    await Promise.allSettled(up);
+    // 2) Bajar remotos y fusionar (gana el updatedAt m\u00e1s reciente)
+    const rs=await Promise.all([
+      F.fs.getDocs(F.fs.collection(F.db,"tanks")),
+      F.fs.getDocs(F.fs.collection(F.db,"inspections"))
+    ]);
+    let nt=0,ni=0;
+    rs[0].docs.forEach(function(d){const t=d.data();if(!t||!t.id)return;const ex=S.tanks.find(function(x){return x.id===t.id;});
+      if(!ex){S.tanks.push(t);nt++;}else if((t.updatedAt||0)>(ex.updatedAt||0)){Object.assign(ex,t);nt++;}});
+    rs[1].docs.forEach(function(d){const i=d.data();if(!i||!i.id)return;const idx=S.inspections.findIndex(function(x){return x.id===i.id;});
+      if(idx<0){S.inspections.push(i);ni++;}else if((i.updatedAt||0)>(S.inspections[idx].updatedAt||0)){S.inspections[idx]=i;ni++;}});
+    saveTanksToLS();saveInspsToLS();
+    if(!silent){showToast("\u2714 Sincronizado \u2014 "+nt+" tanques y "+ni+" inspecciones actualizados.","#22c55e");render();}
+    return{nt:nt,ni:ni};
+  })().finally(function(){FB._sync=null;});
+  return FB._sync;
+}
+async function fbLoadUsers(){
+  if(!fbEnabled())return;
+  try{
+    const F=await fbLoad();
+    if(!F.user){S.admin.users=[];return;}
+    const snap=await F.fs.getDocs(F.fs.collection(F.db,"users"));
+    S.admin.users=snap.docs.map(function(d){return Object.assign({uid:d.id},d.data());});
+    render();
+  }catch(e){console.warn("[FB] usuarios:",e);}
+}
+async function fbSetRole(uid,role){
+  try{
+    const F=await fbLoad();
+    await F.fs.updateDoc(F.fs.doc(F.db,"users/"+uid),{role:role,updatedAt:Date.now()});
+    showToast("Rol actualizado \u2014 se aplicar\u00e1 en el pr\u00f3ximo inicio de sesi\u00f3n de ese usuario.","#22c55e");
+    fbLoadUsers();
+  }catch(e){showToast("Error al cambiar rol: "+fbErrMsg(e),"#ef4444");}
+}
+function fbInit(){
+  fbLoad().then(function(F){
+    F.au.onAuthStateChanged(F.auth,function(user){
+      if(user){
+        FB.user=user;FB.email=user.email;
+        const wasLogged=!!S.auth;
+        F.fs.getDoc(F.fs.doc(F.db,"users/"+user.uid)).then(function(snap){
+          const role=snap.exists()?(snap.data().role||"inspector"):"inspector";
+          if(!snap.exists()){F.fs.setDoc(F.fs.doc(F.db,"users/"+user.uid),{email:user.email,role:"inspector",createdAt:Date.now(),updatedAt:Date.now()}).catch(function(){});}
+          S.auth=role;S.fbUser=user.uid;S.fbEmail=user.email;
+          if(!wasLogged&&S.page==="login"){if(role==="admin"&&S.role==="admin")go("admin");else go("home");}
+          else render();
+          fbSync(true).catch(function(){});
+        }).catch(function(){render();});
+      }else{
+        FB.user=null;FB.email=null;
+        if(S.fbUser){S.auth=null;S.fbUser=null;S.fbEmail=null;if(S.page!=="login")go("home");}
+      }
+    });
+  }).catch(function(e){console.warn("[FB] init:",e&&e.message?e.message:e);});
+}
+function saveFbConfig(){
+  const ta=document.getElementById("fb-cfg");if(!ta)return;
+  const raw=(ta.value||"").trim();
+  if(!raw){showToast("Pega el JSON de configuraci\u00f3n de Firebase.","#f59e0b");return;}
+  try{
+    const cfg=JSON.parse(raw);
+    if(!cfg.apiKey||!cfg.projectId){showToast("El JSON debe incluir apiKey y projectId.","#ef4444");return;}
+    localStorage.setItem("desiaho-fb-config",JSON.stringify(cfg));
+    showToast("\u2714 Configuraci\u00f3n guardada. Recargando\u2026","#22c55e");
+    setTimeout(function(){location.reload();},900);
+  }catch(e){showToast("JSON inv\u00e1lido: "+e.message,"#ef4444");}
+}
+function clearFbConfig(){
+  try{localStorage.removeItem("desiaho-fb-config");}catch(e){}
+  showToast("Configuraci\u00f3n de nube eliminada.","#f59e0b");
+  setTimeout(function(){location.reload();},700);
+}
 function showToast(msg,clr){const t=document.getElementById("toast");if(!t)return;t.style.background=clr||"#22c55e";t.style.color=(clr&&clr!=="#22c55e")?"white":"#0a0f1e";t.textContent=msg;t.classList.add("show");clearTimeout(S.toastTimer);S.toastTimer=setTimeout(()=>t.classList.remove("show"),4000);}
 function go(pg){S.page=pg;render();}
 function toggleTheme(){S.light=!S.light;applyTheme();try{localStorage.setItem("desiaho-light",S.light?"1":"0");}catch(e){}render();}
@@ -292,9 +589,13 @@ function reqAuth(mod){
   else if(S.auth==="admin"&&mod==="admin"){go("admin");}
   else{S.role=(mod==="admin"?"admin":"inspector");S.auth=null;S.pin="";go("login");}
 }
-function logout(){S.auth=null;S.role=null;S.pin="";S.pinErr=false;go("home");}
+function logout(){
+  const out=function(){S.auth=null;S.role=null;S.pin="";S.pinErr=false;S.fbUser=null;S.fbEmail=null;go("home");};
+  if(FB.ready&&FB.user){FB.au.signOut(FB.auth).then(out).catch(out);}else out();
+}
 // Login
 function renderLogin(){
+  if(fbEnabled())return renderLoginFb();
   const r=S.role;const dots=[0,1,2,3].map(i=>"<div class=\"pin-d"+(S.pin.length>i?" f"+(r==="admin"?"a":""):"")+"\"></div>").join("");
   return '<div class="c" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px"><div style="width:100%;max-width:320px;text-align:center"><div style="font-size:44px;margin-bottom:12px">'+(r==="admin"?"\uD83C\uDFD7":"\uD83D\uDC77")+'</div><div style="font-size:19px;font-weight:900;color:var(--tx1);margin-bottom:4px">'+(r==="admin"?"Administrador":"Inspector")+'</div><div style="font-size:12px;color:var(--mut);margin-bottom:26px">Ingresa tu PIN de acceso</div><div class="bc r p16" style="border:1px solid '+(S.pinErr?"#ef4444":"var(--bord)")+'">'+
     '<div class="f" style="justify-content:center;gap:12px;margin-bottom:18px">'+dots+'</div><div class="g3" style="gap:9px">'+
@@ -305,6 +606,26 @@ function renderLogin(){
     }).join("")+
     '</div><div style="margin-top:11px;font-size:11px;color:var(--bord2)">PIN demo: '+(r==="inspector"?"1234":"9999")+'</div></div>'+
     '<button class="btn-ghost mt12" onclick="go(\'home\')">\u2190 Volver</button></div></div>';
+}
+function renderLoginFb(){
+  const a=S.fbAuth;
+  const esc=function(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");};
+  return '<div class="c" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px"><div style="width:100%;max-width:340px;text-align:center">'+
+    '<div style="font-size:44px;margin-bottom:8px">\u2601\uFE0F</div>'+
+    '<div style="font-size:19px;font-weight:900;color:var(--tx1);margin-bottom:4px">Acceso DESIAHO</div>'+
+    '<div style="font-size:12px;color:var(--mut);margin-bottom:20px">'+(a.mode==="register"?"Crea tu cuenta con email y contrase\u00f1a":"Inicia sesi\u00f3n con tu email")+'</div>'+
+    '<div class="bc r p16" style="border:1px solid '+(a.err?"#ef4444":"var(--bord)")+';text-align:left">'+
+      '<div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">EMAIL</div>'+
+      '<input class="fba-i" type="email" inputmode="email" autocomplete="email" placeholder="tu@empresa.com" value="'+esc(a.email)+'" oninput="S.fbAuth.email=this.value">'+
+      '<div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">CONTRASE\u00d1A</div>'+
+      '<input class="fba-i" type="password" autocomplete="'+(a.mode==="register"?"new-password":"current-password")+'" placeholder="M\u00ednimo 6 caracteres" value="'+esc(a.pass)+'" oninput="S.fbAuth.pass=this.value" onkeydown="if(event.key===\'Enter\')fbLogin()">'+
+      '<div class="fba-e">'+esc(a.err)+'</div>'+
+      '<button class="btn-pry" style="padding:13px" '+(a.busy?"disabled":"")+' onclick="fbLogin()">'+(a.busy?"Conectando\u2026":(a.mode==="register"?"\u2714 Crear cuenta":"\u2714 Iniciar sesi\u00f3n"))+'</button>'+
+      '<button class="btn-ghost" style="width:100%;margin-top:10px;padding:9px;text-align:center" onclick="S.fbAuth.mode=(S.fbAuth.mode===\'register\'?\'login\':\'register\');S.fbAuth.err=\'\';render()">'+(a.mode==="register"?"\u2190 Ya tengo cuenta":"\u26a1 No tengo cuenta, crear una")+'</button>'+
+    '</div>'+
+    '<button class="btn-ghost mt12" onclick="go(\'home\')">\u2190 Volver</button>'+
+    (a.mode==="register"?'<div style="font-size:10px;color:var(--bord2);margin-top:10px;line-height:1.5">Las cuentas nuevas inician como <b>Inspector</b>. Un administrador puede ascenderla desde Panel Admin \u2192 \u2601 Datos.</div>':'')+
+    '</div></div>';
 }
 function pinDigit(d){if(S.pin.length>=4)return;S.pin+=String(d);S.pinErr=false;if(S.pin.length===4)checkPin();else render();}
 function pinBackspace(){S.pin=S.pin.slice(0,-1);S.pinErr=false;render();}
@@ -356,7 +677,7 @@ function renderCampoNotes(qid,nv,ph,c){
     '<textarea rows="2" placeholder="Escribe o dicta la observaci\u00f3n..." oninput="updateCampoNote(\''+qid+'\',this.value)" style="width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:10px;padding:10px;color:var(--tx2);font-size:13px;resize:none;box-sizing:border-box">'+nv+'</textarea>'+
     '<button class="btn-ghost" style="font-size:11px;padding:2px 0;text-decoration:underline;border:none;background:none" onclick="togCampoTpl()">'+(c.showTpl?"Ocultar plantillas":"+ Plantillas r\u00e1pidas")+'</button>'+
     (c.showTpl?'<div class="f fw" style="gap:4px;margin-top:4px">'+OBS.map(t=>'<button class="btn-ghost" style="padding:4px 8px;font-size:10px;background:var(--bg2);border-color:var(--bord)" onclick=\'addCampoNote("'+qid+'",'+JSON.stringify(t)+')\'>'+t+'</button>').join("")+'</div>':'')+
-    '<div class="pg">'+ph.map((p,i)=>'<div class="pg-i"><img src="'+p+'"><button class="pg-d" onclick="delCampoPhoto('+i+')">x</button></div>').join("")+
+    '<div class="pg">'+ph.map((p,i)=>'<div class="pg-i"><img src="'+p+'" onclick="showPhotos(null,\''+q.id+'\')" title="Ver foto"><button class="pg-d" onclick="delCampoPhoto('+i+')">x</button></div>').join("")+
     '<button class="pg-a" onclick="addCampoPhoto()"><span style="font-size:20px">\uD83D\uDCF7</span><span style="font-size:9px;color:var(--mut)">Foto</span></button></div>'+
     '<input type="file" id="campo-cam" accept="image/*" capture="environment" style="display:none" onchange="handleCampoPhoto(event)"></div>';
   return h;
@@ -367,7 +688,9 @@ function toggleCampoRisk(){S.campo.showRisk=!S.campo.showRisk;render();}
 function togCampoTpl(){S.campo.showTpl=!S.campo.showTpl;render();}
 function addCampoNote(qid,txt){S.campo.notes[qid]=(S.campo.notes[qid]||"")+(S.campo.notes[qid]?" \u00b7 ":"")+txt;S.campo.showTpl=false;render();}
 function addCampoPhoto(){const el=document.getElementById("campo-cam");if(el)el.click();}
-function handleCampoPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const q=QUESTIONS[S.campo.idx];if(!q)return;S.campo.photos[q.id]=(S.campo.photos[q.id]||[]).concat(ev.target.result);render();};r.readAsDataURL(f);e.target.value="";}
+function handleCampoPhoto(e){const f=e.target.files[0];if(!f)return;const q=QUESTIONS[S.campo.idx];if(!q){e.target.value="";return;}
+  downscaleImage(f,1280,0.72).then(function(url){S.campo.photos[q.id]=(S.campo.photos[q.id]||[]).concat(url);render();}).catch(function(){showToast("No se pudo procesar la foto.","#ef4444");});
+  e.target.value="";}
 function delCampoPhoto(i){const q=QUESTIONS[S.campo.idx];if(!q)return;S.campo.photos[q.id]=(S.campo.photos[q.id]||[]).filter((_,j)=>j!==i);render();}
 function campoPick(qid,val){S.campo.answers[qid]=S.campo.answers[qid]===val?null:val;if(val==="C"&&S.campo.idx<QUESTIONS.length-1)setTimeout(()=>campoNav(1),350);render();}
 function campoNav(dir){const c=S.campo;const nx=c.idx+dir;if(nx<0||nx>=QUESTIONS.length)return;c.anim=dir>0?"l":"r";render();setTimeout(()=>{c.idx=nx;c.anim=null;c.showRisk=false;c.showTpl=false;S.recording=false;render();},120);}
@@ -396,7 +719,7 @@ function renderCampoSum(){
     [[cCount,"C","#22c55e"],[cp,"CP","#f59e0b"],[nc,"NC","#ef4444"],[pend,"Pend.","var(--mut)"]].map(([v,l,cl])=>"<div class=\"tc\"><div style=\"font-size:26px;font-weight:900;color:"+cl+"\">"+v+"</div><div style=\"font-size:10px;color:var(--mut)\">"+l+"</div></div>").join("")+
     '</div></div>'+
     secData.map(s=>{const lv3=lv(s.pct);return'<div class="f ac gap-sm bc r p12 mb6" style="border:1px solid '+SC[s.sid]+'33;cursor:pointer" onclick="campoJumpToSec('+s.sid+')"><span style="font-size:17px">'+s.icon+'</span><div class="f1"><div style="font-size:12px;font-weight:700;color:var(--tx1)">'+s.sec+'</div><div style="height:4px;background:var(--bg2);border-radius:3px;margin-top:3px"><div style="width:'+s.pct+'%;height:100%;background:'+lv3.c+';border-radius:3px"></div></div></div><div style="font-size:17px;font-weight:900;color:'+lv3.c+';flex-shrink:0">'+s.pct+'%</div></div>';}).join("")+
-    ncs.map(q=>'<div class="bc r p12 mb6" style="border-left:3px solid #ef4444;background:var(--bg2)"><div style="font-size:10px;color:var(--mut);margin-bottom:2px">'+q.id+' \u00b7 '+q.sec+'</div><div style="font-size:12px;color:var(--tx1)">'+q.text+'</div>'+(c.notes[q.id]?'<div style="font-size:11px;color:#f59e0b;margin-top:3px">\uD83D\uDCDD '+c.notes[q.id]+'</div>':"")+'</div>').join("")+
+    ncs.map(q=>'<div class="bc r p12 mb6" style="border-left:3px solid #ef4444;background:var(--bg2)"><div style="font-size:10px;color:var(--mut);margin-bottom:2px">'+q.id+' \u00b7 '+q.sec+'</div><div style="font-size:12px;color:var(--tx1)">'+q.text+'</div>'+(c.notes[q.id]?'<div style="font-size:11px;color:#f59e0b;margin-top:3px">\uD83D\uDCDD '+c.notes[q.id]+'</div>':"")+((c.photos[q.id]||[]).length?'<div style="margin-top:5px"><span class="ph-chip" onclick="showPhotos(null,\''+q.id+'\')">\uD83D\uDCF7 '+(c.photos[q.id]||[]).length+' foto'+((c.photos[q.id]||[]).length===1?'':'s')+'</span></div>':'')+'</div>').join("")+
     '<button class="btn-suc mt6" onclick="campoSave()" id="campo-save-btn">\u2714 GUARDAR EN SISTEMA</button>'+
     '<button class="btn mt6" style="background:#1e3a5f;color:white;border:none;width:100%;padding:12px;font-weight:700;font-size:14px;cursor:pointer" onclick="printCampoReport()">\uD83D\uDCC4 IMPRIMIR REPORTE PDVSA</button>'+
     '<button class="btn-ghost" style="width:100%;padding:12px;margin-top:8px;text-align:center" onclick="go(\'campo-form\')">\u2190 Volver al Campo</button></div>';
@@ -411,7 +734,13 @@ function campoSave(){
   const cp=Object.values(c.answers).filter(v=>v==="CP").length;
   const hallazgos=QUESTIONS.filter(q=>c.answers[q.id]==="NC"||c.answers[q.id]==="CP").map(q=>({sec:q.sec,id:q.id,txt:c.notes[q.id]||q.text.slice(0,50)+"\u2026",tipo:c.answers[q.id],fotos:(c.photos[q.id]||[]).length}));
   const insp={id:tank.id+"-"+Date.now(),tankId:tank.id,tag:tank.id,instalacion:tank.instalacion,producto:tank.producto,capacidad:tank.capacidad,auditor:c.auditor,fecha:new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv2.l,hallazgos,answers:Object.assign({},c.answers),notes:Object.assign({},c.notes),modulo:"Campo R\u00e1pido"};
-  saveInspToLS(insp);showToast("\u2714 Inspecci\u00f3n "+insp.tag+" guardada \u2014 "+insp.score+"% "+insp.nivel);
+  const photoRows=Object.keys(c.photos).filter(function(k){return(c.photos[k]||[]).length;}).map(function(k){return{key:insp.id+"|"+k,images:c.photos[k]};});
+  insp.photoQids=photoRows.map(function(r){return r.key.split("|")[1];});
+  insp.fotos=photoRows.reduce(function(a,r){return a+r.images.length;},0);
+  saveInspToLS(insp);
+  if(photoRows.length)idbPutMany(photoRows).catch(function(){showToast("Las fotos no se pudieron guardar en este dispositivo.","#f59e0b");});
+  fbPushInsp(insp);
+  showToast("\u2714 Inspecci\u00f3n "+insp.tag+" guardada \u2014 "+insp.score+"% "+insp.nivel+(insp.fotos?" \u00b7 "+insp.fotos+" fotos":""));
   c.tankId=null;c.auditor="";c.idx=0;c.answers={};c.notes={};c.photos={};c.showRisk=false;c.showTpl=false;if(S.recognition){try{S.recognition.stop();}catch(e){}S.recognition=null;}S.recording=false;go("home");
 }
 // Tecnico
@@ -474,11 +803,12 @@ function tecnicoSave(){
   const cp=Object.values(t.answers).filter(v=>v==="CP").length;
   const hallazgos=QUESTIONS.filter(q=>t.answers[q.id]==="NC"||t.answers[q.id]==="CP").map(q=>({sec:q.sec,id:q.id,txt:t.notes[q.id]||q.text.slice(0,50)+"\u2026",tipo:t.answers[q.id],fotos:0}));
   const insp={id:tank.id+"-"+Date.now(),tankId:tank.id,tag:tank.id,instalacion:tank.instalacion,producto:tank.producto,capacidad:tank.capacidad,auditor:t.auditor,fecha:t.fecha||new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv2.l,hallazgos,answers:Object.assign({},t.answers),notes:Object.assign({},t.notes),modulo:"Panel T\u00e9cnico"};
-  saveInspToLS(insp);showToast("\u2714 Inspecci\u00f3n "+insp.tag+" guardada \u2014 "+insp.score+"% "+insp.nivel);
+  saveInspToLS(insp);fbPushInsp(insp);showToast("\u2714 Inspecci\u00f3n "+insp.tag+" guardada \u2014 "+insp.score+"% "+insp.nivel);
   t.tankId=null;t.auditor="";t.fecha="";t.answers={};t.notes={};t.open={1:true};go("home");
 }
 // Admin
 function showAddTank(){S.admin.addTank=true;render();}
+function showCloud(){S.admin.cloud=true;S.admin.cloudCfg=fbConfig()?JSON.stringify(fbConfig(),null,2):"";if(fbEnabled()&&S.fbUser)fbLoadUsers();render();}
 function setAdminFilt(f){S.admin.filt=f;render();}
 function goToTank(id){S.admin.selTank=id;go("tank-detail");}
 function renderAdminCharts(){
@@ -513,6 +843,7 @@ function renderAdmin(){
     '<div class="f1"><div style="font-size:10px;color:var(--bord2);letter-spacing:2px">DESIAHO \u00b7 PANEL ADMINISTRADOR</div><div style="font-size:15px;font-weight:900;color:var(--tx1)">Gesti\u00f3n de Flota de Tanques</div></div>'+
     '<button class="btn-ghost" style="background:#22c55e22;border-color:#22c55e44;color:#22c55e;font-weight:700" onclick="showAddTank()">+ Tanque</button>'+
     '<button class="btn-ghost" style="background:#3b82f622;border-color:#3b82f644;color:#60a5fa;font-weight:700" onclick="printFleetReport()" title="Imprimir o guardar el informe de flota en PDF">⎙ Informe de Flota (PDF)</button>'+
+    '<button class="btn-ghost" style="background:#3b82f622;border-color:#3b82f644;color:#60a5fa;font-weight:700" onclick="showCloud()" title="Nube, respaldos y usuarios">\u2601 Datos</button>'+
     '<button class="btn-ghost" onclick="loadData();render()">\ud83d\udd04</button></div>';
   // Alerts
   if(alerts.length){
@@ -573,13 +904,53 @@ function renderAdmin(){
       '<div class="f gap-sm mt16"><button class="btn-ghost" style="flex:1;padding:12px;text-align:center;font-size:14px" onclick="S.admin.addTank=false;render()">Cancelar</button>'+
       '<button class="btn-ghost" style="flex:2;padding:12px;text-align:center;font-size:14px;background:#22c55e;border-color:#22c55e;color:#0a0f1e;font-weight:800" onclick="addNewTank()">\u2714 Guardar Tanque</button></div></div></div>';
   }
+  // Cloud / Backup / Users modal
+  if(a.cloud){
+    const cfgTxt=String(a.cloudCfg||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    h+='<div class="mc"><div class="mc-b" style="max-width:540px;max-height:88vh;overflow:auto">'+
+      '<div style="font-size:15px;font-weight:800;color:var(--tx1)">\u2601 Datos, Nube y Respaldo</div>'+
+      '<div style="font-size:11px;color:var(--mut);margin-bottom:14px">Copia de seguridad local + sincronizaci\u00f3n con Firebase</div>'+
+      '<div class="bc r p12 mb8" style="background:var(--bg2);font-size:12px;color:var(--tx2)">'+
+        '<div class="f js ac mb6"><span>Nube (Firebase)</span><span class="badge-sm" style="background:'+(fbEnabled()?"#22c55e22":"#f59e0b22")+';color:'+(fbEnabled()?"#22c55e":"#f59e0b")+'">'+(fbEnabled()?"CONFIGURADO":"SIN CONFIGURAR")+'</span></div>'+
+        '<div class="f js ac mb6"><span>Sesi\u00f3n</span><span style="color:var(--sub);font-size:11px">'+(S.fbEmail||"sin iniciar en la nube")+(S.auth?" \u00b7 rol "+S.auth:"")+'</span></div>'+
+        '<div class="f js ac"><span>Datos locales</span><span style="color:var(--sub);font-size:11px">'+S.tanks.length+' tanques \u00b7 '+S.inspections.length+' inspecciones</span></div>'+
+      '</div>'+
+      '<div class="g g2 gap-sm mb8">'+
+        '<button class="btn-ghost" style="padding:11px;text-align:center;font-size:12px" onclick="exportBackup()">\uD83D\uDCE6 Exportar backup</button>'+
+        '<button class="btn-ghost" style="padding:11px;text-align:center;font-size:12px" onclick="document.getElementById(\'bk-file\').click()">\uD83D\uDCE5 Importar backup</button>'+
+      '</div>'+
+      '<input type="file" id="bk-file" accept="application/json,.json" style="display:none" onchange="importBackup(this)">'+
+      '<button class="btn-ghost" style="width:100%;padding:11px;margin-bottom:12px;text-align:center;font-size:12px;background:#3b82f622;border-color:#3b82f644;color:#60a5fa;font-weight:700" '+((fbEnabled()&&S.fbUser)?"":"disabled")+' onclick="fbSync(false)">\u21BB Sincronizar con la nube ahora</button>'+
+      '<div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">CONFIGURACI\u00d3N FIREBASE (JSON <i>config</i> de la consola)</div>'+
+      '<textarea id="fb-cfg" rows="5" style="width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:10px;color:var(--tx2);font-size:11px;font-family:monospace;box-sizing:border-box" placeholder=\'{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}\'>'+cfgTxt+'</textarea>'+
+      '<div class="f gap-sm mt6">'+
+        '<button class="btn-ghost" style="flex:2;padding:10px;text-align:center;font-size:12px;background:#22c55e;border-color:#22c55e;color:#0a0f1e;font-weight:800" onclick="saveFbConfig()">\u2714 Guardar configuraci\u00f3n</button>'+
+        '<button class="btn-ghost" style="flex:1;padding:10px;text-align:center;font-size:12px;color:#ef4444" onclick="clearFbConfig()">Quitar</button>'+
+      '</div>';
+    if(S.auth==="admin"&&fbEnabled()){
+      h+='<div class="f ac js" style="margin-top:14px"><div style="font-size:11px;color:var(--sub);font-weight:700">\uD83D\uDC65 USUARIOS</div><button class="btn-ghost" style="padding:3px 10px;font-size:10px" onclick="fbLoadUsers()">\uD83D\uDD04 Actualizar</button></div>';
+      if(!S.fbUser)h+='<div style="font-size:11px;color:var(--bord2);margin-top:4px">Inicia sesi\u00f3n en la nube para ver los usuarios.</div>';
+      else if(!S.admin.users.length)h+='<div style="font-size:11px;color:var(--bord2);margin-top:4px">Sin usuarios a\u00fan \u2014 pulsa \u00abActualizar\u00bb o crea una cuenta desde el login.</div>';
+      S.admin.users.forEach(function(u){
+        h+='<div class="urole"><div style="min-width:0"><div style="font-weight:700;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(u.email||u.uid)+'</div><div style="font-size:10px;color:var(--mut)">'+String(u.uid).slice(0,12)+'\u2026</div></div>'+
+          '<div class="f ac gap-sm" style="flex-shrink:0"><span class="badge-sm" style="background:'+(u.role==="admin"?"#f59e0b22":"#3b82f622")+';color:'+(u.role==="admin"?"#f59e0b":"#60a5fa")+'">'+(u.role||"inspector")+'</span>'+
+          (u.role==="admin"?'<button class="btn-ghost" style="padding:4px 9px;font-size:10px" title="Quitar admin" onclick="fbSetRole(\''+u.uid+'\',\'inspector\')">\u2193</button>':'<button class="btn-ghost" style="padding:4px 9px;font-size:10px" title="Hacer admin" onclick="fbSetRole(\''+u.uid+'\',\'admin\')">\u2191 Admin</button>')+
+          '</div></div>';
+      });
+    }
+    h+='<div style="font-size:10px;color:var(--bord2);margin-top:12px;line-height:1.6"><b>C\u00f3mo conectar la nube:</b> 1) Crea el proyecto en <i>console.firebase.google.com</i>. 2) <i>Authentication \u2192 Get started \u2192 Email/Password \u2192 habilitar</i>. 3) <i>Firestore Database \u2192 Create database</i> (modo production) con reglas: <i>allow read, write: if request.auth != null</i>. 4) <i>Project settings \u2192 Your apps \u2192 Web \u2192 copia el objeto config</i> y p\u00e9galo arriba.</div>'+
+      '<div class="f gap-sm mt12"><button class="btn-ghost" style="flex:1;padding:11px;text-align:center;font-size:13px" onclick="S.admin.cloud=false;render()">Cerrar</button></div>'+
+      '</div></div>';
+  }
   return h;
 }
 function addNewTank(){
   const n=S.admin.newTank;
   if(!n.id||!n.instalacion){showToast("TAG e Instalaci\u00f3n son obligatorios.","#f59e0b");return;}
-  S.tanks.push({id:n.id,instalacion:n.instalacion,producto:n.producto||"",capacidad:Number(n.capacidad)||0,custodio:n.custodio||""});
-  saveTanksToLS();S.admin.addTank=false;S.admin.newTank={id:"",instalacion:"",producto:"",capacidad:"",custodio:""};render();
+  if(S.tanks.some(function(t){return t.id===n.id;})){showToast("Ya existe un tanque con ese TAG.","#ef4444");return;}
+  const tank={id:n.id,instalacion:n.instalacion,producto:n.producto||"",capacidad:Number(n.capacidad)||0,custodio:n.custodio||""};
+  S.tanks.push(tank);
+  saveTanksToLS();fbPushTank(tank);S.admin.addTank=false;S.admin.newTank={id:"",instalacion:"",producto:"",capacidad:"",custodio:""};render();
 }
 function renderTankDetail(){
   const a=S.admin;const tank=S.tanks.find(t=>t.id===a.selTank);
@@ -612,9 +983,9 @@ function renderTankDetail(){
         '<div class="tc"><div style="font-size:19px;font-weight:900;color:'+ilv.c+'">'+insp.score+'%</div><div class="badge-sm" style="background:'+ilv.c+'22;color:'+ilv.c+'">'+ilv.l+'</div></div></div>';
       if(isO){
         const cCount=Object.values(insp.answers||{}).filter(v=>v==="C").length;
-        h+='<div class="p12" style="padding-top:0"><div class="f gap-sm mb8"><span style="font-size:12px;color:#22c55e;font-weight:700">C:'+cCount+'</span><span style="font-size:12px;color:#f59e0b;font-weight:700">CP:'+(insp.cp||0)+'</span><span style="font-size:12px;color:#ef4444;font-weight:700">NC:'+(insp.nc||0)+'</span></div>';
+        h+='<div class="p12" style="padding-top:0"><div class="f gap-sm mb8" style="flex-wrap:wrap"><span style="font-size:12px;color:#22c55e;font-weight:700">C:'+cCount+'</span><span style="font-size:12px;color:#f59e0b;font-weight:700">CP:'+(insp.cp||0)+'</span><span style="font-size:12px;color:#ef4444;font-weight:700">NC:'+(insp.nc||0)+'</span>'+((insp.photoQids||[]).length?'<span class="ph-chip" onclick="showInspPhotos('+JSON.stringify(insp.id).replace(/"/g,"&quot;")+')">\uD83D\uDCF7 Fotos ('+(insp.fotos||0)+')</span>':'')+'</div>';
         (insp.hallazgos||[]).forEach(hj=>{
-          h+='<div class="f gap-sm" style="padding:6px 10px;background:var(--surf);border-radius:8px;margin-bottom:4px;border-left:3px solid '+(hj.tipo==="NC"?"#ef4444":"#f59e0b")+'"><span style="font-size:10px;color:var(--mut);flex-shrink:0;font-weight:700">'+hj.id+'</span><span style="font-size:11px;color:#cbd5e1;flex:1">'+hj.txt+'</span><span class="badge-sm" style="background:'+(hj.tipo==="NC"?"#ef444422":"#f59e0b22")+';color:'+(hj.tipo==="NC"?"#ef4444":"#f59e0b")+';flex-shrink:0">'+hj.tipo+'</span></div>';
+          h+='<div class="f gap-sm" style="padding:6px 10px;background:var(--surf);border-radius:8px;margin-bottom:4px;border-left:3px solid '+(hj.tipo==="NC"?"#ef4444":"#f59e0b")+'"><span style="font-size:10px;color:var(--mut);flex-shrink:0;font-weight:700">'+hj.id+'</span><span style="font-size:11px;color:#cbd5e1;flex:1">'+hj.txt+'</span>'+((hj.fotos||0)>0?'<span class="ph-chip" style="flex-shrink:0" onclick="showPhotos(\''+insp.id+'\',\''+hj.id+'\')">\uD83D\uDCF7 '+hj.fotos+'</span>':'')+'<span class="badge-sm" style="background:'+(hj.tipo==="NC"?"#ef444422":"#f59e0b22")+';color:'+(hj.tipo==="NC"?"#ef4444":"#f59e0b")+';flex-shrink:0">'+hj.tipo+'</span></div>';
         });
         if(!(insp.hallazgos||[]).length)h+='<div style="font-size:11px;color:var(--bord2);font-style:italic">Sin hallazgos registrados.</div>';
         h+='</div>';
@@ -1020,9 +1391,10 @@ function printFleetReport(){
   }
   const params=new URLSearchParams(window.location.search);
   const hash=location.hash.replace("#","");
-  if(params.get("admin")==="1"){S.auth="admin";S.page="admin";render();return;}
-  if(hash==="campo"||hash==="tecnico"){S.role="inspector";S.page="login";render();return;}
+  if(!fbEnabled()&&params.get("admin")==="1"){S.auth="admin";S.page="admin";render();return;}
+  if(hash==="campo"||hash==="tecnico"){S.role="inspector";S.page="login";render();if(fbEnabled())fbInit();return;}
   S.page="home";render();
+  if(fbEnabled())fbInit();
 })();
 </script>
 </body>
