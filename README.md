@@ -51,11 +51,15 @@ En iOS/Safari: Compartir → **Agregar a pantalla de inicio**.
 |---|---|
 | Tanques | `localStorage["desiaho-tanks"]` |
 | Inspecciones | `localStorage["desiaho-insps"]` |
+| Instalaciones | `localStorage["desiaho-insts"]` |
 | Fotos | IndexedDB `desiaho-db` (redimensionadas a 1280px JPEG) |
 | Sesión (si hay nube) | Firebase Auth (persiste al recargar) |
 
+### 🏗 Instalaciones (Panel Admin)
+**Panel Admin → 🏗 Instalaciones** abre el catálogo donde puedes **agregar, editar y quitar** instalaciones. Cada una tiene: **nombre**, **descripción breve**, **proceso** y **ubicación**. Al editar el nombre, los tanques que usaban ese nombre se renombran automáticamente. Se sincronizan con la nube (colección `instalaciones`) y viajan en el backup. Al crear la primera vez se generan desde los nombres de instalación de los tanques existentes.
+
 ### 📥 Exportar / Importar backup
-**Panel Admin → ☁ Datos → 📦 Exportar backup** genera un `.json` con tanques, inspecciones y fotos. **📥 Importar backup** fusiona sin duplicados (gana el que ya existe localmente). El archivo sirve para migrar entre dispositivos o como copia de seguridad ante fallos del navegador.
+**Panel Admin → ☁ Datos → 📦 Exportar backup** genera un `.json` con tanques, inspecciones, instalaciones y fotos. **📥 Importar backup** fusiona sin duplicados (gana el que ya existe localmente). El archivo sirve para migrar entre dispositivos o como copia de seguridad ante fallos del navegador.
 
 ### ☁️ Sincronización con Firebase (opcional)
 La app funciona 100% offline por defecto. Para compartir datos entre dispositivos/usuarios:

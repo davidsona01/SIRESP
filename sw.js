@@ -6,7 +6,7 @@
    - Todo lo demás (mismo origen, GET): cache-first + revalidación en segundo plano.
 */
 
-const VERSION = "desiaho-v5";
+const VERSION = "desiaho-v6";
 const CACHE = VERSION;
 
 const PRECACHE = [
