@@ -73,12 +73,15 @@ La app funciona 100% offline por defecto. Para compartir datos entre dispositivo
      }
    }
    ```
-4. **Project settings → Your apps → Web app** → copia el objeto `config` (JSON)
-5. En la app: **Panel Admin → ☁ Datos → pega el JSON → ✔ Guardar configuración** (recarga sola)
+4. **Authentication → Settings → Authorized domains → Add domain** → añade el dominio donde publicas la app (p. ej. `davidsona01.github.io` o tu dominio propio). Sin esto, el login falla con `unauthorized-domain`.
+5. **Project settings → Your apps → Web app** → copia el objeto `config` (JSON)
+6. En la app: **Panel Admin → ☁ Datos → pega el JSON → ✔ Guardar configuración** (recarga sola)
 
 Una vez conectado:
 - El login pasa a ser **email + contraseña** (las cuentas nuevas inician como *Inspector*)
-- Un admin puede ascender/descender usuarios desde **☁ Datos → 👥 Usuarios**
+- **Primer admin:** crea tu cuenta desde el login y luego sube su rol desde la consola de Firebase: **Firestore → colección `users` → tu documento → editar campo `role` → `admin`**. Al volver a iniciar sesión entrarás como admin y ya podrás ascender a otros desde **☁ Datos → 👥 Usuarios**
+- Los datos se suben al guardar y se bajan con **↻ Sincronizar con la nube ahora** (también al iniciar sesión)
+- Las **fotos se guardan localmente y en el backup**; no se sincronizan a la nube en esta versión
 - Los datos se suben al guardar y se bajan con **↻ Sincronizar con la nube ahora** (también al iniciar sesión)
 - Las **fotos se guardan localmente y en el backup**; no se sincronizan a la nube en esta versión
 
