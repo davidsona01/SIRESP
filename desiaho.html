@@ -327,7 +327,14 @@ function importBackup(inp){
 // === Firebase: nube + usuarios reales (mejora #3) ===
 const FB_V="10.12.5";
 const FB={app:null,auth:null,db:null,fs:null,au:null,ready:false,loading:null,user:null,email:null,_sync:null};
-function fbConfig(){try{const c=localStorage.getItem("desiaho-fb-config");return c?JSON.parse(c):null;}catch(e){return null;}}
+const FB_DEFAULT={apiKey:"AIzaSyCV44CpGYI0JMlIcWl8PGgvQLDaJ6c_cns",authDomain:"desiaho-4fb0f.firebaseapp.com",projectId:"desiaho-4fb0f",storageBucket:"desiaho-4fb0f.firebasestorage.app",messagingSenderId:"828067415466",appId:"1:828067415466:web:e220ed8f68bc60b2dbd7d3"};
+function fbConfig(){
+  try{
+    const c=localStorage.getItem("desiaho-fb-config");
+    if(c){const j=JSON.parse(c);if(j&&j.disabled)return null;if(j&&j.apiKey&&j.projectId)return j;}
+  }catch(e){}
+  return(FB_DEFAULT&&FB_DEFAULT.apiKey&&FB_DEFAULT.projectId)?FB_DEFAULT:null;
+}
 function fbEnabled(){const c=fbConfig();return !!(c&&c.apiKey&&c.projectId);}
 function fbLoad(){
   if(FB.ready)return Promise.resolve(FB);
@@ -489,8 +496,8 @@ function saveFbConfig(){
   }catch(e){showToast("JSON inv\u00e1lido: "+e.message,"#ef4444");}
 }
 function clearFbConfig(){
-  try{localStorage.removeItem("desiaho-fb-config");}catch(e){}
-  showToast("Configuraci\u00f3n de nube eliminada.","#f59e0b");
+  try{localStorage.setItem("desiaho-fb-config",JSON.stringify({disabled:1}));}catch(e){}
+  showToast("Nube desactivada en este dispositivo.","#f59e0b");
   setTimeout(function(){location.reload();},700);
 }
 function showToast(msg,clr){const t=document.getElementById("toast");if(!t)return;t.style.background=clr||"#22c55e";t.style.color=(clr&&clr!=="#22c55e")?"white":"#0a0f1e";t.textContent=msg;t.classList.add("show");clearTimeout(S.toastTimer);S.toastTimer=setTimeout(()=>t.classList.remove("show"),4000);}
