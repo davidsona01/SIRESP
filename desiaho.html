@@ -570,14 +570,14 @@ function renderHome(){
     '<div class="stb"><div class="stb-n" style="color:#3b82f6">'+t+'</div><div class="stb-l">Tanques en Flota</div></div>'+
     '<div class="stb"><div class="stb-n" style="color:#f59e0b">'+i+'</div><div class="stb-l">Inspecciones</div></div>'+
     '<div class="stb"><div class="stb-n" style="color:#ef4444">'+c+'</div><div class="stb-l">Cr\u00edticos</div></div></div>'+
-    (!S.auth||S.auth==="inspector"?renderHomeModules():"")+
+    renderHomeModules()+
     renderHomeAdmin()+
     (S.auth?'<button class="btn" style="width:100%;margin-bottom:16px" onclick="logout()">Cerrar sesi\u00f3n ('+S.auth+')</button>':'')+
     (i>0?renderHomeLast():'')+
     '<div class="tc mt16" style="font-size:10px;color:var(--bord)">DESIAHO v1.0 \u00b7 API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div></div></div>';
 }
 function renderHomeModules(){
-  return '<div class="mb16"><div class="f ac gap-sm mb8"><span style="font-size:11px;color:var(--mut);font-weight:700;letter-spacing:1px">\uD83D\uDC77 M\u00d3DULOS DE INSPECCI\u00d3N</span>'+(S.auth==="inspector"?'<span class="badge-sm" style="background:#22c55e22;color:#22c55e">\u25cf Sesi\u00f3n activa</span>':'')+'</div><div class="g g2 gap">'+
+  return '<div class="mb16"><div class="f ac gap-sm mb8"><span style="font-size:11px;color:var(--mut);font-weight:700;letter-spacing:1px">\uD83D\uDC77 M\u00d3DULOS DE INSPECCI\u00d3N</span>'+(S.auth?'<span class="badge-sm" style="background:#22c55e22;color:#22c55e">\u25cf Sesi\u00f3n activa</span>':'')+'</div><div class="g g2 gap">'+
     '<button class="mbtn" style="border-color:#f59e0b44" onclick="reqAuth(\'campo\')"><div class="mbtn-ic">\u26a1</div><div class="mbtn-t" style="color:#f59e0b">Campo R\u00e1pido</div><div class="mbtn-d">Una pregunta \u00b7 C\u00e1mara \u00b7 Voz</div></button>'+
     '<button class="mbtn" style="border-color:#3b82f644" onclick="reqAuth(\'tecnico\')"><div class="mbtn-ic">\uD83D\uDCCB</div><div class="mbtn-t" style="color:#3b82f6">Panel T\u00e9cnico</div><div class="mbtn-d">Formulario completo \u00b7 55 \u00edtems</div></button></div></div>';
 }
