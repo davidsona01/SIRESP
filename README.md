@@ -79,7 +79,8 @@ La app funciona 100% offline por defecto. Para compartir datos entre dispositivo
 
 Una vez conectado:
 - El login pasa a ser **email + contraseña** (las cuentas nuevas inician como *Inspector*)
-- El formulario de registro incluye **confirmar contraseña**, un botón **👁 Ver/Ocultar** para revisar lo tecleado y **🔑 ¿Olvidaste tu contraseña?** envía un enlace de restablecimiento por correo (Authentication → Templates → *Password reset*)
+- El formulario de registro incluye **confirmar contraseña**, un botón **👁 Ver/Ocultar** para revisar lo tecleado y **🔑 ¿Olvidaste tu contraseña?** envía un enlace de restablecimiento por correo
+- El **correo y el panel de restablecimiento de Google salen en español** (la app fija `languageCode='es'`) y, al cambiar la clave, el enlace **vuelve al inicio de la app** con el aviso *"✔ Contraseña cambiada…"*
 - **Primer admin:** crea tu cuenta desde el login y luego sube su rol desde la consola de Firebase: **Firestore → colección `users` → tu documento → editar campo `role` → `admin`**. Al volver a iniciar sesión entrarás como admin y ya podrás ascender a otros desde **☁ Datos → 👥 Usuarios**
 - **Roles:** el *Inspector* usa los módulos de inspección; el *admin* accede a todo (inspección + panel de administración)
 - Los datos se suben al guardar y se bajan con **↻ Sincronizar con la nube ahora** (también al iniciar sesión)
