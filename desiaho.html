@@ -203,7 +203,7 @@ campo:{phase:"sel",tankId:null,auditor:"",idx:0,answers:{},notes:{},photos:{},sh
 tecnico:{phase:"sel",tankId:null,auditor:"",fecha:"",answers:{},notes:{},saving:false,open:{1:true}},
 admin:{view:"ov",selTank:null,selInsp:null,addTank:false,filt:"Todas",newTank:{id:"",instalacion:"",producto:"",capacidad:"",custodio:""}}};
 S.installable=false;S.deferredPrompt=null;
-S.fbAuth={mode:"login",email:"",pass:"",busy:false,err:""};
+S.fbAuth={mode:"login",email:"",pass:"",pass2:"",showPass:false,busy:false,err:"",ok:""};
 S.admin.cloud=false;S.admin.cloudCfg="";S.admin.users=[];
 window.addEventListener("online",function(){var p=document.getElementById("netpill");if(p){p.className="netpill";p.innerHTML='<span class="netdot"></span>ONLINE';}showToast("Conexión restablecida. Los datos se guardan en este dispositivo.","#22c55e");});
 window.addEventListener("offline",function(){var p=document.getElementById("netpill");if(p){p.className="netpill off";p.innerHTML='<span class="netdot"></span>OFFLINE';}showToast("Sin conexión. DESIAHO sigue funcionando con los datos guardados.","#f59e0b");});
@@ -372,6 +372,10 @@ async function fbLogin(){
   const a=S.fbAuth;if(a.busy)return;
   a.email=(a.email||"").trim();
   if(!a.email||!a.pass){a.err="Ingresa email y contrase\u00f1a.";render();return;}
+  if(a.mode==="register"){
+    if(a.pass.length<6){a.err="La contrase\u00f1a debe tener 6+ caracteres.";render();return;}
+    if(a.pass!==a.pass2){a.err="Las contrase\u00f1as no coinciden. Revisa la confirmaci\u00f3n.";render();return;}
+  }
   a.busy=true;a.err="";render();
   try{
     const F=await fbLoad();
@@ -388,6 +392,33 @@ async function fbLogin(){
     a.busy=false;a.err=fbErrMsg(e);render();
   }
 }
+async function fbRecover(){
+  const a=S.fbAuth;if(a.busy)return;
+  a.email=(a.email||"").trim();
+  if(!a.email){a.err="Ingresa tu email para recibir el enlace de recuperaci\u00f3n.";a.ok="";render();return;}
+  a.busy=true;a.err="";a.ok="";render();
+  try{
+    const F=await fbLoad();
+    await F.au.sendPasswordResetEmail(F.auth,a.email);
+    a.busy=false;
+    a.ok="✔ Enlace enviado a "+a.email+". Revisa tu correo (y la carpeta spam).";
+    render();
+  }catch(e){
+    a.busy=false;
+    a.err=fbErrMsg(e)==="No existe ese usuario. Crea la cuenta."?"No hay cuenta con ese email. Crea la cuenta primero.":fbErrMsg(e);
+    a.ok="";
+    render();
+  }
+}
+async function fbTogglePass(){
+  S.fbAuth.showPass=!S.fbAuth.showPass;
+  const inp=document.getElementById("fb-pass");
+  if(inp)inp.type=S.fbAuth.showPass?"text":"password";
+  const inp2=document.getElementById("fb-pass2");
+  if(inp2)inp2.type=S.fbAuth.showPass?"text":"password";
+  const eye=document.getElementById("fb-eye");
+  if(eye)eye.textContent=S.fbAuth.showPass?"\uD83D\uDC41\uFE0F Ocultar":"\uD83D\uDC41\uFE0F Ver";
+}
 async function fbAfterLogin(user){
   try{
     const F=await fbLoad();
@@ -399,7 +430,7 @@ async function fbAfterLogin(user){
     }else{role=snap.data().role||"inspector";}
     S.auth=role;S.fbUser=user.uid;S.fbEmail=user.email;
     FB.user=user;FB.email=user.email;
-    S.fbAuth.busy=false;S.fbAuth.err="";S.fbAuth.pass="";
+    S.fbAuth.busy=false;S.fbAuth.err="";S.fbAuth.pass="";S.fbAuth.pass2="";S.fbAuth.showPass=false;
     showToast("\u2714 Sesi\u00f3n iniciada: "+user.email+" ("+role+")","#22c55e");
     if(role==="admin"&&S.role==="admin")go("admin");else go("home");
     fbSync(true).catch(function(){});
@@ -617,21 +648,44 @@ function renderLogin(){
 function renderLoginFb(){
   const a=S.fbAuth;
   const esc=function(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");};
-  return '<div class="c" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px"><div style="width:100%;max-width:340px;text-align:center">'+
-    '<div style="font-size:44px;margin-bottom:8px">\u2601\uFE0F</div>'+
-    '<div style="font-size:19px;font-weight:900;color:var(--tx1);margin-bottom:4px">Acceso DESIAHO</div>'+
-    '<div style="font-size:12px;color:var(--mut);margin-bottom:20px">'+(a.mode==="register"?"Crea tu cuenta con email y contrase\u00f1a":"Inicia sesi\u00f3n con tu email")+'</div>'+
-    '<div class="bc r p16" style="border:1px solid '+(a.err?"#ef4444":"var(--bord)")+';text-align:left">'+
+  const recover=a.mode==="recover";
+  const reg=a.mode==="register";
+  let head,form;
+  if(recover){
+    head="Recuperar contrase\u00f1a";
+    form=
+      '<div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">EMAIL</div>'+
+      '<input class="fba-i" type="email" inputmode="email" autocomplete="email" placeholder="tu@empresa.com" value="'+esc(a.email)+'" oninput="S.fbAuth.email=this.value" onkeydown="if(event.key===\'Enter\')fbRecover()">'+
+      '<div class="fba-e" style="color:#22c55e">'+esc(a.ok)+'</div>'+
+      '<div class="fba-e">'+esc(a.err)+'</div>'+
+      '<button class="btn-pry" style="padding:13px" '+(a.busy?"disabled":"")+' onclick="fbRecover()">'+(a.busy?"Enviando\u2026":"\uD83D\uDCE7 Enviar enlace de recuperaci\u00f3n")+'</button>'+
+      '<button class="btn-ghost" style="width:100%;margin-top:10px;padding:9px;text-align:center" onclick="S.fbAuth.mode=\'login\';S.fbAuth.err=\'\';S.fbAuth.ok=\'\';render()">\u2190 Volver a iniciar sesi\u00f3n</button>';
+  }else{
+    head=reg?"Crea tu cuenta con email y contrase\u00f1a":"Inicia sesi\u00f1a con tu email";
+    form=
       '<div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">EMAIL</div>'+
       '<input class="fba-i" type="email" inputmode="email" autocomplete="email" placeholder="tu@empresa.com" value="'+esc(a.email)+'" oninput="S.fbAuth.email=this.value">'+
       '<div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">CONTRASE\u00d1A</div>'+
-      '<input class="fba-i" type="password" autocomplete="'+(a.mode==="register"?"new-password":"current-password")+'" placeholder="M\u00ednimo 6 caracteres" value="'+esc(a.pass)+'" oninput="S.fbAuth.pass=this.value" onkeydown="if(event.key===\'Enter\')fbLogin()">'+
+      '<div style="position:relative">'+
+        '<input id="fb-pass" class="fba-i" style="padding-right:76px" type="'+(a.showPass?"text":"password")+'" autocomplete="'+(reg?"new-password":"current-password")+'" placeholder="M\u00ednimo 6 caracteres" value="'+esc(a.pass)+'" oninput="S.fbAuth.pass=this.value" onkeydown="if(event.key===\'Enter\')fbLogin()">'+
+        '<button id="fb-eye" type="button" onclick="fbTogglePass()" style="position:absolute;right:8px;top:9px;background:var(--bg);border:1px solid var(--bord);border-radius:7px;font-size:11px;font-weight:700;color:var(--mut);padding:5px 7px;cursor:pointer">'+(a.showPass?"\uD83D\uDC41\uFE0F Ocultar":"\uD83D\uDC41\uFE0F Ver")+'</button>'+
+      '</div>'+
+      (reg?
+        '<div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">CONFIRMAR CONTRASE\u00d1A</div>'+
+        '<input id="fb-pass2" class="fba-i" type="'+(a.showPass?"text":"password")+'" autocomplete="new-password" placeholder="Repite la contrase\u00f1a" value="'+esc(a.pass2)+'" oninput="S.fbAuth.pass2=this.value" onkeydown="if(event.key===\'Enter\')fbLogin()">'
+        :'')+
       '<div class="fba-e">'+esc(a.err)+'</div>'+
-      '<button class="btn-pry" style="padding:13px" '+(a.busy?"disabled":"")+' onclick="fbLogin()">'+(a.busy?"Conectando\u2026":(a.mode==="register"?"\u2714 Crear cuenta":"\u2714 Iniciar sesi\u00f3n"))+'</button>'+
-      '<button class="btn-ghost" style="width:100%;margin-top:10px;padding:9px;text-align:center" onclick="S.fbAuth.mode=(S.fbAuth.mode===\'register\'?\'login\':\'register\');S.fbAuth.err=\'\';render()">'+(a.mode==="register"?"\u2190 Ya tengo cuenta":"\u26a1 No tengo cuenta, crear una")+'</button>'+
-    '</div>'+
+      '<button class="btn-pry" style="padding:13px" '+(a.busy?"disabled":"")+' onclick="fbLogin()">'+(a.busy?"Conectando\u2026":(reg?"\u2714 Crear cuenta":"\u2714 Iniciar sesi\u00f3n"))+'</button>'+
+      (!reg?'<button type="button" style="width:100%;margin-top:9px;background:none;border:0;color:#60a5fa;font-size:12px;font-weight:700;cursor:pointer;padding:4px" onclick="S.fbAuth.mode=\'recover\';S.fbAuth.err=\'\';S.fbAuth.ok=\'\';render()">\uD83D\uDD11 \u00bfOlvidaste tu contrase\u00f1a?</button>':'')+
+      '<button class="btn-ghost" style="width:100%;margin-top:10px;padding:9px;text-align:center" onclick="S.fbAuth.mode=(\''+(reg?'login':'register')+'\');S.fbAuth.err=\'\';S.fbAuth.showPass=false;render()">'+(reg?"\u2190 Ya tengo cuenta":"\u26a1 No tengo cuenta, crear una")+'</button>';
+  }
+  return '<div class="c" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px"><div style="width:100%;max-width:340px;text-align:center">'+
+    '<div style="font-size:44px;margin-bottom:8px">\u2601\uFE0F</div>'+
+    '<div style="font-size:19px;font-weight:900;color:var(--tx1);margin-bottom:4px">Acceso DESIAHO</div>'+
+    '<div style="font-size:12px;color:var(--mut);margin-bottom:20px">'+head+'</div>'+
+    '<div class="bc r p16" style="border:1px solid '+(a.err?"#ef4444":"var(--bord)")+';text-align:left">'+form+'</div>'+
     '<button class="btn-ghost mt12" onclick="go(\'home\')">\u2190 Volver</button>'+
-    (a.mode==="register"?'<div style="font-size:10px;color:var(--bord2);margin-top:10px;line-height:1.5">Las cuentas nuevas inician como <b>Inspector</b>. Un administrador puede ascenderla desde Panel Admin \u2192 \u2601 Datos.</div>':'')+
+    (reg?'<div style="font-size:10px;color:var(--bord2);margin-top:10px;line-height:1.5">Las cuentas nuevas inician como <b>Inspector</b>. Un administrador puede ascenderla desde Panel Admin \u2192 \u2601 Datos.</div>':'')+
     '</div></div>';
 }
 function pinDigit(d){if(S.pin.length>=4)return;S.pin+=String(d);S.pinErr=false;if(S.pin.length===4)checkPin();else render();}
