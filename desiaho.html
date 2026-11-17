@@ -628,7 +628,7 @@ function reqAuth(mod){
   else{S.role=(mod==="admin"?"admin":"inspector");S.auth=null;S.pin="";go("login");}
 }
 function logout(){
-  const out=function(){S.auth=null;S.role=null;S.pin="";S.pinErr=false;S.fbUser=null;S.fbEmail=null;go("home");};
+  const out=function(){S.auth=null;S.role=null;S.pin="";S.pinErr=false;S.fbUser=null;S.fbEmail=null;S.fbAuth.mode="login";S.fbAuth.err="";S.fbAuth.ok="";S.fbAuth.pass="";S.fbAuth.pass2="";S.fbAuth.showPass=false;go("home");};
   if(FB.ready&&FB.user){FB.au.signOut(FB.auth).then(out).catch(out);}else out();
 }
 // Login
