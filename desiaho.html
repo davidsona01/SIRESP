@@ -592,8 +592,8 @@ function renderHomeLast(){
 }
 function reqAuth(mod){
   if(!S.auth){S.role=(mod==="admin"?"admin":"inspector");go("login");}
-  else if(S.auth==="inspector"&&(mod==="campo"||mod==="tecnico")){go(mod==="campo"?"campo-sel":"tecnico-sel");}
-  else if(S.auth==="admin"&&mod==="admin"){go("admin");}
+  else if(mod==="admin"){if(S.auth==="admin")go("admin");else{S.role="admin";S.auth=null;S.pin="";go("login");}}
+  else if(S.auth==="inspector"||S.auth==="admin"){S.role=S.auth;go(mod==="campo"?"campo-sel":"tecnico-sel");}
   else{S.role=(mod==="admin"?"admin":"inspector");S.auth=null;S.pin="";go("login");}
 }
 function logout(){
