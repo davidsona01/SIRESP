@@ -349,6 +349,7 @@ function fbLoad(){
     ]);
     try{FB.app=mod[0].getApp("desiaho");}catch(e){FB.app=mod[0].initializeApp(cfg,"desiaho");}
     FB.au=mod[1];FB.auth=mod[1].getAuth(FB.app);
+    try{FB.auth.languageCode="es";}catch(e){} // correos y paneles de Firebase en espa\u00f1ol
     FB.fs=mod[2];FB.db=mod[2].getFirestore(FB.app);
     FB.ready=true;
     return FB;
@@ -399,7 +400,7 @@ async function fbRecover(){
   a.busy=true;a.err="";a.ok="";render();
   try{
     const F=await fbLoad();
-    await F.au.sendPasswordResetEmail(F.auth,a.email);
+    await F.au.sendPasswordResetEmail(F.auth,a.email,{url:"https://davidsona01.github.io/desiaho/desiaho.html?reset=1"});
     a.busy=false;
     a.ok="✔ Enlace enviado a "+a.email+". Revisa tu correo (y la carpeta spam).";
     render();
@@ -1452,6 +1453,10 @@ function printFleetReport(){
   }
   const params=new URLSearchParams(window.location.search);
   const hash=location.hash.replace("#","");
+  if(params.get("reset")==="1"){
+    try{history.replaceState(null,"",window.location.pathname);}catch(e){}
+    setTimeout(function(){showToast("✔ Contrase\u00f1a cambiada. Ya puedes iniciar sesi\u00f3n con tu clave nueva.","#22c55e");},400);
+  }
   if(!fbEnabled()&&params.get("admin")==="1"){S.auth="admin";S.page="admin";render();return;}
   if(hash==="campo"||hash==="tecnico"){S.role="inspector";S.page="login";render();if(fbEnabled())fbInit();return;}
   S.page="home";render();
