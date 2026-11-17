@@ -198,10 +198,10 @@ function calc(ans){let s=0,m=0;QUESTIONS.forEach(q=>{const r=sq(ans[q.id],q.weig
 function lv(sc){if(sc>=90)return{l:"EXCELENTE",c:"#22c55e",a:"Mantener est\u00e1ndar."};if(sc>=75)return{l:"MUY BUENO",c:"#84cc16",a:"Mejora continua."};if(sc>=60)return{l:"A NIVEL",c:"#f59e0b",a:"Plan 6 meses."};if(sc>=45)return{l:"BAJO",c:"#f97316",a:"Intervenci\u00f3n 90 d\u00edas."};if(sc>=30)return{l:"MUY BAJO",c:"#ef4444",a:"Intervenci\u00f3n inmediata."};return{l:"DEFICIENTE",c:"#dc2626",a:"DETENER SERVICIO."};}
 function ds(d){return d?Math.floor((Date.now()-new Date(d))/864e5):null;}
 // State
-const S={page:"loading",auth:null,role:null,pin:"",pinErr:false,tanks:[],inspections:[],toastTimer:null,recording:false,recognition:null,
+const S={page:"loading",auth:null,role:null,pin:"",pinErr:false,tanks:[],inspections:[],insts:[],toastTimer:null,recording:false,recognition:null,
 campo:{phase:"sel",tankId:null,auditor:"",idx:0,answers:{},notes:{},photos:{},showRisk:false,showTpl:false,saving:false,touchX:null,anim:null,camReady:false},
 tecnico:{phase:"sel",tankId:null,auditor:"",fecha:"",answers:{},notes:{},saving:false,open:{1:true}},
-admin:{view:"ov",selTank:null,selInsp:null,addTank:false,filt:"Todas",newTank:{id:"",instalacion:"",producto:"",capacidad:"",custodio:""}}};
+admin:{view:"ov",selTank:null,selInsp:null,addTank:false,filt:"Todas",newTank:{id:"",instalacion:"",producto:"",capacidad:"",custodio:""},instsModal:false,instEdit:null,instForm:{nombre:"",desc:"",proceso:"",ubicacion:""}}};
 S.installable=false;S.deferredPrompt=null;
 S.fbAuth={mode:"login",email:"",pass:"",pass2:"",showPass:false,busy:false,err:"",ok:""};
 S.admin.cloud=false;S.admin.cloudCfg="";S.admin.users=[];
@@ -211,8 +211,12 @@ window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();S.d
 window.addEventListener("appinstalled",function(){S.installable=false;S.deferredPrompt=null;showToast("DESIAHO instalado. Funciona con y sin conexión.","#22c55e");render();});
 function promptInstall(){if(!S.deferredPrompt)return;S.deferredPrompt.prompt();S.deferredPrompt.userChoice.then(function(){S.deferredPrompt=null;S.installable=false;render();});}
 // Storage
-function loadData(){try{const t=localStorage.getItem("desiaho-tanks");S.tanks=t?JSON.parse(t):DT.map(t=>({...t}));const i=localStorage.getItem("desiaho-insps");S.inspections=i?JSON.parse(i):[];}catch(e){S.tanks=DT.map(t=>({...t}));S.inspections=[];}}
+function loadData(){try{const t=localStorage.getItem("desiaho-tanks");S.tanks=t?JSON.parse(t):DT.map(t=>({...t}));const i=localStorage.getItem("desiaho-insps");S.inspections=i?JSON.parse(i):[];}catch(e){S.tanks=DT.map(t=>({...t}));S.inspections=[];}
+  try{const n=localStorage.getItem("desiaho-insts");S.insts=n?JSON.parse(n):[];}catch(e){S.insts=[];}
+  if(!S.insts.length){S.insts=[...new Set(S.tanks.map(t=>t.instalacion).filter(Boolean))].map(function(nombre,idx){return{id:"INS-"+(idx+1),nombre:nombre,desc:"",proceso:"",ubicacion:"",updatedAt:Date.now()};});saveInstsToLS();}
+}
 function saveTanksToLS(){try{localStorage.setItem("desiaho-tanks",JSON.stringify(S.tanks));}catch(e){}}
+function saveInstsToLS(){try{localStorage.setItem("desiaho-insts",JSON.stringify(S.insts));}catch(e){}}
 function saveInspsToLS(){try{localStorage.setItem("desiaho-insps",JSON.stringify(S.inspections));}catch(e){}}
 function saveInspToLS(insp){try{S.inspections.push(insp);saveInspsToLS();}catch(e){}}
 // === IndexedDB: persistencia de fotos (mejora #2) ===
@@ -294,14 +298,14 @@ function showInspPhotos(insp){
 async function exportBackup(){
   try{
     const photos=await idbAll().catch(function(){return[];});
-    const data={app:"desiaho",version:1,exportedAt:new Date().toISOString(),tanks:S.tanks,inspections:S.inspections,photos:photos};
+    const data={app:"desiaho",version:1,exportedAt:new Date().toISOString(),tanks:S.tanks,inspections:S.inspections,insts:S.insts,photos:photos};
     const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
     const a=document.createElement("a");
     a.href=URL.createObjectURL(blob);
     a.download="desiaho-backup-"+new Date().toISOString().slice(0,10)+".json";
     document.body.appendChild(a);a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
-    showToast("\u2714 Backup exportado: "+S.tanks.length+" tanques, "+S.inspections.length+" inspecciones, "+photos.length+" registros de fotos.","#22c55e");
+    showToast("\u2714 Backup exportado: "+S.tanks.length+" tanques, "+S.inspections.length+" inspecciones, "+S.insts.length+" instalaciones y "+photos.length+" registros de fotos.","#22c55e");
   }catch(e){showToast("Error al exportar: "+e.message,"#ef4444");}
 }
 function importBackup(inp){
@@ -311,12 +315,13 @@ function importBackup(inp){
     try{
       const d=JSON.parse(fr.result);
       if(!d||d.app!=="desiaho"||!Array.isArray(d.tanks)||!Array.isArray(d.inspections)){showToast("Archivo no v\u00e1lido: no es un backup DESIAHO.","#ef4444");return;}
-      let nt=0,ni=0;
+      let nt=0,ni=0,nins=0;
       d.tanks.forEach(function(t){if(t&&t.id&&!S.tanks.some(function(x){return x.id===t.id;})){S.tanks.push(t);nt++;}});
       d.inspections.forEach(function(i){if(i&&i.id&&!S.inspections.some(function(x){return x.id===i.id;})){S.inspections.push(i);ni++;}});
-      saveTanksToLS();saveInspsToLS();
+      if(Array.isArray(d.insts))d.insts.forEach(function(x){if(x&&x.id&&x.nombre&&!S.insts.some(function(y){return y.id===x.id||y.nombre===x.nombre;})){S.insts.push(x);nins++;}});
+      saveTanksToLS();saveInspsToLS();saveInstsToLS();
       const ph=Array.isArray(d.photos)?d.photos.filter(function(r){return r&&r.key&&Array.isArray(r.images);}):[];
-      const done=function(){render();showToast("\u2714 Importado: "+nt+" tanques, "+ni+" inspecciones, "+ph.length+" registros de fotos.","#22c55e");};
+      const done=function(){render();showToast("\u2714 Importado: "+nt+" tanques, "+ni+" inspecciones"+(nins?", "+nins+" instalaciones":"")+", "+ph.length+" registros de fotos.","#22c55e");};
       if(ph.length){idbPutMany(ph).then(done).catch(function(){render();showToast("\u2714 Datos importados (las fotos no se pudieron guardar).","#f59e0b");});}
       else done();
     }catch(e){showToast("Error al importar: "+e.message,"#ef4444");}
@@ -449,6 +454,11 @@ async function fbPushTank(t){
   try{await FB.fs.setDoc(FB.fs.doc(FB.db,"tanks/"+t.id),Object.assign({},t,{updatedAt:Date.now()}));}
   catch(e){console.warn("[FB] push tank:",e);}
 }
+async function fbPushInst(i){
+  if(!fbEnabled()||!FB.ready||!FB.user||!navigator.onLine)return;
+  try{await FB.fs.setDoc(FB.fs.doc(FB.db,"instalaciones/"+i.id),Object.assign({},i,{updatedAt:i.updatedAt||Date.now()}));}
+  catch(e){console.warn("[FB] push instalacion:",e);}
+}
 async function fbSync(silent){
   if(!fbEnabled())throw new Error("Firebase no est\u00e1 configurado");
   if(FB._sync)return FB._sync;
@@ -459,20 +469,24 @@ async function fbSync(silent){
     const up=[];
     S.tanks.forEach(function(t){up.push(FB.fs.setDoc(FB.fs.doc(FB.db,"tanks/"+t.id),Object.assign({},t,{updatedAt:t.updatedAt||Date.now()})));});
     S.inspections.forEach(function(i){up.push(FB.fs.setDoc(FB.fs.doc(FB.db,"inspections/"+i.id),Object.assign({},i,{updatedAt:i.updatedAt||Date.now()})));});
+    S.insts.forEach(function(i){up.push(FB.fs.setDoc(FB.fs.doc(FB.db,"instalaciones/"+i.id),Object.assign({},i,{updatedAt:i.updatedAt||Date.now()})));});
     await Promise.allSettled(up);
     // 2) Bajar remotos y fusionar (gana el updatedAt m\u00e1s reciente)
     const rs=await Promise.all([
       F.fs.getDocs(F.fs.collection(F.db,"tanks")),
-      F.fs.getDocs(F.fs.collection(F.db,"inspections"))
+      F.fs.getDocs(F.fs.collection(F.db,"inspections")),
+      F.fs.getDocs(F.fs.collection(F.db,"instalaciones"))
     ]);
-    let nt=0,ni=0;
+    let nt=0,ni=0,nins=0;
     rs[0].docs.forEach(function(d){const t=d.data();if(!t||!t.id)return;const ex=S.tanks.find(function(x){return x.id===t.id;});
       if(!ex){S.tanks.push(t);nt++;}else if((t.updatedAt||0)>(ex.updatedAt||0)){Object.assign(ex,t);nt++;}});
     rs[1].docs.forEach(function(d){const i=d.data();if(!i||!i.id)return;const idx=S.inspections.findIndex(function(x){return x.id===i.id;});
       if(idx<0){S.inspections.push(i);ni++;}else if((i.updatedAt||0)>(S.inspections[idx].updatedAt||0)){S.inspections[idx]=i;ni++;}});
-    saveTanksToLS();saveInspsToLS();
-    if(!silent){showToast("\u2714 Sincronizado \u2014 "+nt+" tanques y "+ni+" inspecciones actualizados.","#22c55e");render();}
-    return{nt:nt,ni:ni};
+    rs[2].docs.forEach(function(d){const i=d.data();if(!i||!i.id)return;const ex=S.insts.find(function(x){return x.id===i.id;});
+      if(!ex){S.insts.push(i);nins++;}else if((i.updatedAt||0)>(ex.updatedAt||0)){Object.assign(ex,i);nins++;}});
+    saveTanksToLS();saveInspsToLS();saveInstsToLS();
+    if(!silent){showToast("\u2714 Sincronizado \u2014 "+nt+" tanques, "+ni+" inspecciones y "+nins+" instalaciones.","#22c55e");render();}
+    return{nt:nt,ni:ni,nins:nins};
   })().finally(function(){FB._sync=null;});
   return FB._sync;
 }
@@ -870,6 +884,41 @@ function tecnicoSave(){
 }
 // Admin
 function showAddTank(){S.admin.addTank=true;render();}
+function showInsts(){S.admin.instsModal=true;S.admin.instEdit=null;S.admin.instForm={nombre:"",desc:"",proceso:"",ubicacion:""};render();}
+function editInst(id){const it=S.insts.find(function(x){return x.id===id;});if(!it)return;S.admin.instEdit=id;S.admin.instForm={nombre:it.nombre,desc:it.desc||"",proceso:it.proceso||"",ubicacion:it.ubicacion||""};render();}
+function cancelInst(){S.admin.instEdit=null;S.admin.instForm={nombre:"",desc:"",proceso:"",ubicacion:""};render();}
+function delInst(id){
+  const it=S.insts.find(function(x){return x.id===id;});if(!it)return;
+  const nt=S.tanks.filter(function(t){return t.instalacion===it.nombre;}).length;
+  if(!confirm("\u00bfQuitar la instalaci\u00f3n \u00ab"+it.nombre+"\u00bb?"+(nt?" Sus "+nt+" tanques no se borran, solo cambian de agrupaci\u00f3n vac\u00eda.":"")))return;
+  S.insts=S.insts.filter(function(x){return x.id!==id;});
+  saveInstsToLS();
+  try{if(fbEnabled()&&FB.ready&&FB.user&&navigator.onLine)FB.fs.deleteDoc(FB.fs.doc(FB.db,"instalaciones/"+id));}catch(e){}
+  if(S.admin.instEdit===id)cancelInst();else render();
+  showToast("\u2714 Instalaci\u00f3n quitada.","#22c55e");
+}
+function saveInst(){
+  const f=S.admin.instForm;const nombre=String(f.nombre||"").trim();
+  if(!nombre){showToast("Escribe el nombre de la instalaci\u00f3n.","#f59e0b");return;}
+  const dup=S.insts.some(function(x){return x.nombre.toLowerCase()===nombre.toLowerCase()&&x.id!==S.admin.instEdit;});
+  if(dup){showToast("Ya existe una instalaci\u00f3n con ese nombre.","#ef4444");return;}
+  const data={nombre:nombre,desc:String(f.desc||"").trim(),proceso:String(f.proceso||"").trim(),ubicacion:String(f.ubicacion||"").trim(),updatedAt:Date.now()};
+  if(S.admin.instEdit){
+    const it=S.insts.find(function(x){return x.id===S.admin.instEdit;});
+    if(it){
+      const oldName=it.nombre;
+      Object.assign(it,data);
+      if(oldName!==nombre)S.tanks.forEach(function(t){if(t.instalacion===oldName){t.instalacion=nombre;t.updatedAt=Date.now();fbPushTank(t);}});
+      saveTanksToLS();fbPushInst(it);
+      showToast("\u2714 Instalaci\u00f3n actualizada.","#22c55e");
+    }
+  }else{
+    const it=Object.assign({id:"INS-"+Date.now().toString(36).toUpperCase()},data);
+    S.insts.push(it);fbPushInst(it);
+    showToast("\u2714 Instalaci\u00f3n agregada.","#22c55e");
+  }
+  saveInstsToLS();cancelInst();
+}
 function showCloud(){S.admin.cloud=true;S.admin.cloudCfg=fbConfig()?JSON.stringify(fbConfig(),null,2):"";if(fbEnabled()&&S.fbUser)fbLoadUsers();render();}
 function setAdminFilt(f){S.admin.filt=f;render();}
 function goToTank(id){S.admin.selTank=id;go("tank-detail");}
@@ -904,6 +953,7 @@ function renderAdmin(){
   let h='<div><div class="ah"><button class="btn-ghost" onclick="go(\'home\')" style="font-size:14px;font-weight:700">\u2190 Inicio</button>'+
     '<div class="f1"><div style="font-size:10px;color:var(--bord2);letter-spacing:2px">DESIAHO \u00b7 PANEL ADMINISTRADOR</div><div style="font-size:15px;font-weight:900;color:var(--tx1)">Gesti\u00f3n de Flota de Tanques</div></div>'+
     '<button class="btn-ghost" style="background:#22c55e22;border-color:#22c55e44;color:#22c55e;font-weight:700" onclick="showAddTank()">+ Tanque</button>'+
+    '<button class="btn-ghost" style="background:#8b5cf622;border-color:#8b5cf644;color:#a78bfa;font-weight:700" onclick="showInsts()" title="Administrar instalaciones">\uD83C\uDFD7 Instalaciones</button>'+
     '<button class="btn-ghost" style="background:#3b82f622;border-color:#3b82f644;color:#60a5fa;font-weight:700" onclick="printFleetReport()" title="Imprimir o guardar el informe de flota en PDF">⎙ Informe de Flota (PDF)</button>'+
     '<button class="btn-ghost" style="background:#3b82f622;border-color:#3b82f644;color:#60a5fa;font-weight:700" onclick="showCloud()" title="Nube, respaldos y usuarios">\u2601 Datos</button>'+
     '<button class="btn-ghost" onclick="loadData();render()">\ud83d\udd04</button></div>';
@@ -966,6 +1016,41 @@ function renderAdmin(){
       '<div class="f gap-sm mt16"><button class="btn-ghost" style="flex:1;padding:12px;text-align:center;font-size:14px" onclick="S.admin.addTank=false;render()">Cancelar</button>'+
       '<button class="btn-ghost" style="flex:2;padding:12px;text-align:center;font-size:14px;background:#22c55e;border-color:#22c55e;color:#0a0f1e;font-weight:800" onclick="addNewTank()">\u2714 Guardar Tanque</button></div></div></div>';
   }
+  // Instalaciones modal (agregar / editar)
+  if(a.instsModal){
+    const f=a.instForm;
+    const escI=function(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");};
+    h+='<div class="mc"><div class="mc-b" style="max-width:560px;max-height:88vh;overflow:auto">'+
+      '<div class="f js ac mb12"><div style="font-size:15px;font-weight:800;color:var(--tx1)">\uD83C\uDFD7 Instalaciones</div>'+
+      '<button class="btn-ghost" style="padding:5px 12px;font-size:12px" onclick="S.admin.instsModal=false;render()">\u2715 Cerrar</button></div>'+
+      '<div style="font-size:11px;color:var(--mut);margin-bottom:12px">Cat\u00e1logo de instalaciones: descripci\u00f3n, proceso y ubicaci\u00f3n. Los tanques se agrupan por su nombre de instalaci\u00f3n.</div>';
+    // Lista
+    if(!S.insts.length)h+='<div style="font-size:12px;color:var(--bord2);padding:8px 0">Sin instalaciones a\u00fan.</div>';
+    S.insts.forEach(function(it,idx){
+      const nt=S.tanks.filter(function(t){return t.instalacion===it.nombre;}).length;
+      const editing=a.instEdit===it.id;
+      h+='<div class="bc r p12 mb8" style="border:1px solid '+(editing?"#8b5cf6":"var(--bord)")+';background:var(--bg2)">'+
+        '<div class="f js ac gap-sm"><div style="font-size:13px;font-weight:800;color:var(--tx1)">'+escI(it.nombre)+'</div>'+
+        '<span class="badge-sm" style="background:#8b5cf622;color:#a78bfa">'+nt+' tanque'+(nt===1?"":"s")+'</span></div>'+
+        (it.desc?'<div style="font-size:11px;color:var(--tx2);margin-top:4px">\uD83D\uDCCB '+escI(it.desc)+'</div>':'')+
+        (it.proceso?'<div style="font-size:11px;color:var(--tx2);margin-top:2px">\u2699\uFE0F '+escI(it.proceso)+'</div>':'')+
+        (it.ubicacion?'<div style="font-size:11px;color:var(--mut);margin-top:2px">\uD83D\uDCCD '+escI(it.ubicacion)+'</div>':'')+
+        '<div class="f gap-sm mt8"><button class="btn-ghost" style="padding:4px 12px;font-size:11px;background:#3b82f622;border-color:#3b82f644;color:#60a5fa" onclick="editInst(\''+it.id+'\')">\u270F\uFE0F Editar</button>'+
+        '<button class="btn-ghost" style="padding:4px 12px;font-size:11px;color:#ef4444" onclick="delInst(\''+it.id+'\')">\uD83D\uDDD1 Quitar</button></div></div>';
+    });
+    // Formulario agregar/editar
+    const editing=a.instEdit!==null;
+    h+='<div class="bc r p14" style="border:1px dashed '+(editing?"#3b82f6":"var(--bord)")+';margin-top:6px">'+
+      '<div style="font-size:13px;font-weight:800;color:var(--tx1);margin-bottom:10px">'+(editing?"\u270F\uFE0F Editar instalaci\u00f3n":"+ Nueva instalaci\u00f3n")+'</div>'+
+      [["nombre","NOMBRE *","text","Bater\u00eda Norte"],["desc","DESCRIPCI\u00d3N BREVE","text","Almacenamiento de crudo y formaci\u00f3n"],["proceso","PROCESO","text","Recepci\u00f3n, almacenamiento y bombeo a l\u00ednea"],["ubicacion","UBICACI\u00d3N","text","Sector Norte, Km 4.5 \u00b7 Planta Central"]].map(function(pair){
+        const k=pair[0];
+        return '<div class="mb8"><div style="font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:700">'+pair[1]+'</div>'+
+          '<input type="text" value="'+escI(f[k])+'" placeholder="'+pair[3]+'" oninput="S.admin.instForm.'+k+'=this.value" style="width:100%;background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:10px 12px;color:var(--tx1);font-size:13px;box-sizing:border-box"></div>';
+      }).join("")+
+      '<div class="f gap-sm mt12"><button class="btn-ghost" style="flex:1;padding:11px;text-align:center;font-size:13px" onclick="cancelInst()">Cancelar</button>'+
+      '<button class="btn-ghost" style="flex:2;padding:11px;text-align:center;font-size:13px;background:#8b5cf6;border-color:#8b5cf6;color:white;font-weight:800" onclick="saveInst()">'+(editing?"\u2714 Guardar cambios":"\u2714 Agregar instalaci\u00f3n")+'</button></div></div>';
+    h+='</div></div>';
+  }
   // Cloud / Backup / Users modal
   if(a.cloud){
     const cfgTxt=String(a.cloudCfg||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
@@ -975,7 +1060,7 @@ function renderAdmin(){
       '<div class="bc r p12 mb8" style="background:var(--bg2);font-size:12px;color:var(--tx2)">'+
         '<div class="f js ac mb6"><span>Nube (Firebase)</span><span class="badge-sm" style="background:'+(fbEnabled()?"#22c55e22":"#f59e0b22")+';color:'+(fbEnabled()?"#22c55e":"#f59e0b")+'">'+(fbEnabled()?"CONFIGURADO":"SIN CONFIGURAR")+'</span></div>'+
         '<div class="f js ac mb6"><span>Sesi\u00f3n</span><span style="color:var(--sub);font-size:11px">'+(S.fbEmail||"sin iniciar en la nube")+(S.auth?" \u00b7 rol "+S.auth:"")+'</span></div>'+
-        '<div class="f js ac"><span>Datos locales</span><span style="color:var(--sub);font-size:11px">'+S.tanks.length+' tanques \u00b7 '+S.inspections.length+' inspecciones</span></div>'+
+        '<div class="f js ac"><span>Datos locales</span><span style="color:var(--sub);font-size:11px">'+S.tanks.length+' tanques \u00b7 '+S.inspections.length+' inspecciones \u00b7 '+S.insts.length+' instalaciones</span></div>'+
       '</div>'+
       '<div class="g g2 gap-sm mb8">'+
         '<button class="btn-ghost" style="padding:11px;text-align:center;font-size:12px" onclick="exportBackup()">\uD83D\uDCE6 Exportar backup</button>'+
