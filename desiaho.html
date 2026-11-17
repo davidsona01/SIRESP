@@ -610,7 +610,7 @@ function renderHome(){
 }
 function renderHomeModules(){
   return '<div class="mb16"><div class="f ac gap-sm mb8"><span style="font-size:11px;color:var(--mut);font-weight:700;letter-spacing:1px">\uD83D\uDC77 M\u00d3DULOS DE INSPECCI\u00d3N</span>'+(S.auth?'<span class="badge-sm" style="background:#22c55e22;color:#22c55e">\u25cf Sesi\u00f3n activa</span>':'')+'</div><div class="g g2 gap">'+
-    '<button class="mbtn" style="border-color:#f59e0b44" onclick="reqAuth(\'campo\')"><div class="mbtn-ic">\u26a1</div><div class="mbtn-t" style="color:#f59e0b">Campo R\u00e1pido</div><div class="mbtn-d">Una pregunta \u00b7 C\u00e1mara \u00b7 Voz</div></button>'+
+    '<button class="mbtn" style="border-color:#f59e0b44" onclick="reqAuth(\'campo\')"><div class="mbtn-ic">\uD83D\uDD75\uFE0F</div><div class="mbtn-t" style="color:#f59e0b">Inspecci\u00f3n de Campo</div><div class="mbtn-d">Una pregunta \u00b7 C\u00e1mara \u00b7 Voz</div></button>'+
     '<button class="mbtn" style="border-color:#3b82f644" onclick="reqAuth(\'tecnico\')"><div class="mbtn-ic">\uD83D\uDCCB</div><div class="mbtn-t" style="color:#3b82f6">Panel T\u00e9cnico</div><div class="mbtn-d">Formulario completo \u00b7 55 \u00edtems</div></button></div></div>';
 }
 function renderHomeAdmin(){
@@ -700,7 +700,7 @@ function checkPin(){
 // Campo Rapido
 function renderCampoSel(){
   const c=S.campo;const tank=S.tanks.find(t=>t.id===c.tankId);
-  return '<div class="c"><div class="f ac gap-sm mb16"><button class="btn-ghost" onclick="go(\'home\')" style="font-size:16px">\u2190</button><div><div style="font-size:18px;font-weight:900;color:var(--tx1)">\u26a1 Campo R\u00e1pido</div><div style="font-size:12px;color:var(--mut)">Selecciona el tanque</div></div></div>'+
+  return '<div class="c"><div class="f ac gap-sm mb16"><button class="btn-ghost" onclick="go(\'home\')" style="font-size:16px">\u2190</button><div><div style="font-size:18px;font-weight:900;color:var(--tx1)">\uD83D\uDD75\uFE0F Inspecci\u00f3n de Campo</div><div style="font-size:12px;color:var(--mut)">Selecciona el tanque</div></div></div>'+
     S.tanks.map(t=>'<div class="bc r p14 mb8" style="border:2px solid '+(t.id===c.tankId?"#3b82f6":"var(--bord)")+';cursor:pointer" onclick="campoPickTank(\''+t.id+'\')"><div class="f js ac"><div><div style="font-size:15px;font-weight:800;color:var(--tx1)">'+t.id+'</div><div style="font-size:11px;color:var(--mut)">'+t.instalacion+' \u00b7 '+t.producto+'</div></div><div style="font-size:12px;color:var(--mut)">'+(t.capacidad||0).toLocaleString()+' m\u00b3</div></div></div>').join("")+
     '<div class="mt16 mb8"><div style="font-size:12px;color:var(--sub);margin-bottom:5px;font-weight:700">NOMBRE DEL INSPECTOR</div><input type="text" id="campo-aud" placeholder="Ing. Nombre Apellido" value="'+c.auditor+'" oninput="S.campo.auditor=this.value"></div>'+
     '<button class="btn-pry mt8" onclick="campoStart()">INICIAR \u2192</button></div>';
@@ -795,7 +795,7 @@ function campoSave(){
   const nc=Object.values(c.answers).filter(v=>v==="NC").length;
   const cp=Object.values(c.answers).filter(v=>v==="CP").length;
   const hallazgos=QUESTIONS.filter(q=>c.answers[q.id]==="NC"||c.answers[q.id]==="CP").map(q=>({sec:q.sec,id:q.id,txt:c.notes[q.id]||q.text.slice(0,50)+"\u2026",tipo:c.answers[q.id],fotos:(c.photos[q.id]||[]).length}));
-  const insp={id:tank.id+"-"+Date.now(),tankId:tank.id,tag:tank.id,instalacion:tank.instalacion,producto:tank.producto,capacidad:tank.capacidad,auditor:c.auditor,fecha:new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv2.l,hallazgos,answers:Object.assign({},c.answers),notes:Object.assign({},c.notes),modulo:"Campo R\u00e1pido"};
+  const insp={id:tank.id+"-"+Date.now(),tankId:tank.id,tag:tank.id,instalacion:tank.instalacion,producto:tank.producto,capacidad:tank.capacidad,auditor:c.auditor,fecha:new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv2.l,hallazgos,answers:Object.assign({},c.answers),notes:Object.assign({},c.notes),modulo:"Inspecci\u00f3n de Campo"};
   const photoRows=Object.keys(c.photos).filter(function(k){return(c.photos[k]||[]).length;}).map(function(k){return{key:insp.id+"|"+k,images:c.photos[k]};});
   insp.photoQids=photoRows.map(function(r){return r.key.split("|")[1];});
   insp.fotos=photoRows.reduce(function(a,r){return a+r.images.length;},0);
@@ -1271,8 +1271,8 @@ function printCampoReport(){
   if(!tank){showToast("Datos de tanque no disponibles.","#ef4444");return;}
   const score=calc(c.answers);const nc=Object.values(c.answers).filter(v=>v==="NC").length;
   const cp=Object.values(c.answers).filter(v=>v==="CP").length;
-  const insp={auditor:c.auditor,fecha:new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv(score).l,answers:Object.assign({},c.answers),notes:Object.assign({},c.notes),modulo:"Campo R\u00e1pido"};
-  printReport(insp,tank,"Campo R\u00e1pido");
+  const insp={auditor:c.auditor,fecha:new Date().toISOString().split("T")[0],score,nc,cp,nivel:lv(score).l,answers:Object.assign({},c.answers),notes:Object.assign({},c.notes),modulo:"Inspecci\u00f3n de Campo"};
+  printReport(insp,tank,"Inspecci\u00f3n de Campo");
 }
 function printTecnicoReport(){
   const t=S.tecnico;const tank=S.tanks.find(x=>x.id===t.tankId);

@@ -34,7 +34,7 @@
   ],
   "shortcuts": [
     {
-      "name": "Campo Rápido",
+      "name": "Inspección de Campo",
       "short_name": "Campo",
       "description": "Inspección de campo, una pregunta a la vez",
       "url": "./desiaho.html#campo"
