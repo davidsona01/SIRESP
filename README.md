@@ -1,4 +1,4 @@
-# DESIAHO — Sistema Integral de Riesgos
+# Sistema Integrado para Evaluación de Riesgos en Seguridad de los Procesos (SIRESP).
 
 **Inspección y Gestión de Tanques Atmosféricos de Techo Cónico**
 
