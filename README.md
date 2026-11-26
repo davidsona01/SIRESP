@@ -42,7 +42,7 @@ Los datos de inspección se guardan en `localStorage` del dispositivo (no se env
 
 ## 📦 Instalación como app
 
-En Chrome/Android: botón **"⬇ Instalar DESIAHO"** en el inicio.
+En Chrome/Android: botón **"⬇ Instalar SIRESP"** en el inicio.
 En iOS/Safari: Compartir → **Agregar a pantalla de inicio**.
 
 ## 💾 Datos: almacenamiento, respaldo y nube

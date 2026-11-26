@@ -1,12 +1,12 @@
 {
-  "name": "DESIAHO - Sistema Integral de Riesgos",
-  "short_name": "DESIAHO",
+  "name": "SIRESP - Sistema Integrado para Evaluación de Riesgos",
+  "short_name": "SIRESP",
   "description": "Inspección y gestión de tanques atmosféricos de techo cónico. Funciona con y sin conexión a internet.",
   "lang": "es",
   "dir": "ltr",
   "start_url": "./desiaho.html",
   "scope": "./",
-  "id": "/desiaho/",
+  "id": "/SIRESP/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0f1e",
@@ -26,7 +26,7 @@
       "purpose": "any"
     },
     {
-      "src": "./icon-512.png",
+      "src": "./icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

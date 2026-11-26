@@ -7,12 +7,12 @@
 <meta name="description" content="Inspección y gestión de tanques atmosféricos. Funciona con y sin conexión a internet.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DESIAHO">
+<meta name="apple-mobile-web-app-title" content="SIRESP">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>DESIAHO – Sistema Integral de Riesgos</title>
+<title>SIRESP – Sistema Integrado para Evaluación de Riesgos</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#0a0f1e;--bg2:#0f172a;--row2:#1a2740;--surf:#1e293b;--bord:#334155;--bord2:#475569;--mut:#64748b;--sub:#94a3b8;--tx2:#e2e8f0;--tx1:#f1f5f9}
@@ -41,11 +41,13 @@ input,textarea,button{font-family:inherit}
 input,textarea{background:var(--bg2);border:2px solid var(--bord);border-radius:10px;color:var(--tx1);font-size:14px;padding:12px;width:100%;outline:none;transition:border .2s}
 input:focus,textarea:focus{border-color:#3b82f6}
 textarea{resize:none}
-.hero{background:linear-gradient(135deg,var(--surf),var(--bg2));border-bottom:1px solid var(--bord);padding:22px 20px 16px;text-align:center}
+.hero{background:#2f373e;border-bottom:1px solid var(--bord);padding:14px 14px 16px;text-align:center}body.light .hero{background:#dfe7eb}
 .hero-icon{font-size:50px;margin-bottom:8px}
 .hero-sub{font-size:10px;color:var(--bord2);letter-spacing:3px}
 .hero-title{font-size:26px;font-weight:900;color:var(--tx1)}
-.hero-desc{font-size:13px;color:var(--mut);margin-top:4px}
+.hero-desc{font-size:13px;color:var(--mut);margin-top:8px}
+.brand-img{display:block;width:100%;max-width:1024px;margin:0 auto;border-radius:14px}
+.only-light{display:none}body.light .only-light{display:block}body.light .only-dark{display:none}
 .stb{background:var(--surf);border-radius:12px;padding:14px 10px;text-align:center;border:1px solid var(--bord)}
 .stb-n{font-size:26px;font-weight:900;line-height:1}
 .stb-l{font-size:10px;color:var(--mut);margin-top:3px}
@@ -80,7 +82,7 @@ textarea{resize:none}
 .mc-b{background:var(--surf);border-radius:16px;padding:24px;width:100%;max-width:440px;border:1px solid var(--bord)}
 #toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#22c55e;color:#0a0f1e;padding:11px 20px;border-radius:12px;font-weight:800;font-size:13px;z-index:3000;box-shadow:0 4px 24px #22c55e44;max-width:90vw;text-align:center;transition:opacity .3s;opacity:0;pointer-events:none}
 #toast.show{opacity:1;pointer-events:auto}
-.netpill{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:.5px;background:#22c55e22;border:1px solid #22c55e44;color:#22c55e}
+.netpill{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;font-size:10px;font-weight:800;letter-spacing:.5px;background:#22c55e22;border:1px solid #22c55e44;color:#22c55e}
 .netpill.off{background:#f59e0b22;border-color:#f59e0b44;color:#f59e0b}
 .netdot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .installbtn{margin-top:10px}
@@ -119,7 +121,7 @@ canvas.chart{width:100%;height:100%;display:block}
 <div id="toast"></div>
 <div id="app"></div>
 <script>
-// DESIAHO v1.0 - Sistema Integral de Riesgos
+// SIRESP v1.0 - Sistema Integral de Riesgos
 const QD=[
 ["1.1","Base / Fundación",1,"⬡","¿La base o fundación presenta asentamientos diferenciales?","Preventiva",3,"Asentamiento diferencial puede fracturar la soldadura de fondo generando derrame masivo."],
 ["1.2a","Base / Fundación",1,"⬡","¿El Dique o Muro de Contención está íntegro y sin fugas?","Mitigación",3,"Sin dique íntegro un derrame alcanza fuentes de ignición y cuerpos de agua."],
@@ -206,9 +208,9 @@ S.installable=false;S.deferredPrompt=null;
 S.fbAuth={mode:"login",email:"",pass:"",pass2:"",showPass:false,busy:false,err:"",ok:""};
 S.admin.cloud=false;S.admin.cloudCfg="";S.admin.users=[];
 window.addEventListener("online",function(){var p=document.getElementById("netpill");if(p){p.className="netpill";p.innerHTML='<span class="netdot"></span>ONLINE';}showToast("Conexión restablecida. Los datos se guardan en este dispositivo.","#22c55e");});
-window.addEventListener("offline",function(){var p=document.getElementById("netpill");if(p){p.className="netpill off";p.innerHTML='<span class="netdot"></span>OFFLINE';}showToast("Sin conexión. DESIAHO sigue funcionando con los datos guardados.","#f59e0b");});
+window.addEventListener("offline",function(){var p=document.getElementById("netpill");if(p){p.className="netpill off";p.innerHTML='<span class="netdot"></span>OFFLINE';}showToast("Sin conexión. SIRESP sigue funcionando con los datos guardados.","#f59e0b");});
 window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();S.deferredPrompt=e;S.installable=true;if(S.page==="home")render();});
-window.addEventListener("appinstalled",function(){S.installable=false;S.deferredPrompt=null;showToast("DESIAHO instalado. Funciona con y sin conexión.","#22c55e");render();});
+window.addEventListener("appinstalled",function(){S.installable=false;S.deferredPrompt=null;showToast("SIRESP instalado. Funciona con y sin conexión.","#22c55e");render();});
 function promptInstall(){if(!S.deferredPrompt)return;S.deferredPrompt.prompt();S.deferredPrompt.userChoice.then(function(){S.deferredPrompt=null;S.installable=false;render();});}
 // Storage
 function loadData(){try{const t=localStorage.getItem("desiaho-tanks");S.tanks=t?JSON.parse(t):DT.map(t=>({...t}));const i=localStorage.getItem("desiaho-insps");S.inspections=i?JSON.parse(i):[];}catch(e){S.tanks=DT.map(t=>({...t}));S.inspections=[];}
@@ -314,7 +316,7 @@ function importBackup(inp){
   fr.onload=function(){
     try{
       const d=JSON.parse(fr.result);
-      if(!d||d.app!=="desiaho"||!Array.isArray(d.tanks)||!Array.isArray(d.inspections)){showToast("Archivo no v\u00e1lido: no es un backup DESIAHO.","#ef4444");return;}
+      if(!d||d.app!=="desiaho"||!Array.isArray(d.tanks)||!Array.isArray(d.inspections)){showToast("Archivo no v\u00e1lido: no es un backup SIRESP.","#ef4444");return;}
       let nt=0,ni=0,nins=0;
       d.tanks.forEach(function(t){if(t&&t.id&&!S.tanks.some(function(x){return x.id===t.id;})){S.tanks.push(t);nt++;}});
       d.inspections.forEach(function(i){if(i&&i.id&&!S.inspections.some(function(x){return x.id===i.id;})){S.inspections.push(i);ni++;}});
@@ -606,13 +608,17 @@ function render(){
   }
   setTimeout(()=>{if(S.page==="admin"){renderAdminCharts();}if(S.page==="tank-detail"){renderTankCharts();}},50);
 }
-function renderLoading(){return"<div class=\"ld\"><div class=\"ld-ic\">?</div><div class=\"ld-l\">Cargando DESIAHO\u2026</div></div>";}
+function renderLoading(){return"<div class=\"ld\"><div class=\"ld-ic\">?</div><div class=\"ld-l\">Cargando SIRESP\u2026</div></div>";}
 // Home
 function renderHome(){
   const t=S.tanks.length,i=S.inspections.length,c=i?S.inspections.filter(x=>x.score<60).length:0;
-  return '<div><div class="hero" style="position:relative"><button class="btn-ghost" style="position:absolute;top:12px;right:12px;font-size:11px;font-weight:700" onclick="toggleTheme()">'+(S.light?'\uD83C\uDF19 Oscuro':'\u2600\uFE0F Claro')+'</button>'+
-    '<div class="netpill'+(navigator.onLine?"":" off")+'"><span class="netdot"></span>'+(navigator.onLine?"ONLINE":"OFFLINE")+'</div>'+
-    (S.installable?'<button class="btn btn-suc installbtn" style="width:100%;padding:12px;font-size:13px" onclick="promptInstall()">⬇ Instalar DESIAHO en este dispositivo</button>':'')+'<div class="hero-icon">?</div><div class="hero-sub">SISTEMA INTEGRAL DE RIESGOS \u2014 SEGURIDAD DE LOS PROCESOS</div><div class="hero-title">DESIAHO</div><div class="hero-desc">Inspecci\u00f3n y Gesti\u00f3n de Tanques Atmosf\u00e9ricos \u00b7 Techo C\u00f3nico</div></div><div class="c"><div class="g g3 gap-sm mb16">'+
+  return '<div><div class="hero" style="position:relative">'+
+    '<div class="f ac" style="justify-content:space-between;gap:8px;margin-bottom:10px">'+
+      '<div id="netpill" class="netpill'+(navigator.onLine?"":" off")+'"><span class="netdot"></span>'+(navigator.onLine?"ONLINE":"OFFLINE")+'</div>'+
+      '<button class="btn-ghost" style="font-size:11px;font-weight:700" onclick="toggleTheme()">'+(S.light?'\uD83C\uDF19 Oscuro':'\u2600\uFE0F Claro')+'</button>'+
+    '</div>'+
+    '<img class="brand-img only-dark" src="header-dark.png" alt="SIRESP"><img class="brand-img only-light" src="header-light.png" alt="SIRESP">'+
+    (S.installable?'<button class="btn btn-suc installbtn" style="width:100%;padding:12px;font-size:13px" onclick="promptInstall()">⬇ Instalar SIRESP en este dispositivo</button>':'')+'<div class="hero-desc">Inspecci\u00f3n y Gesti\u00f3n de Tanques Atmosf\u00e9ricos \u00b7 Techo C\u00f3nico</div></div><div class="c"><div class="g g3 gap-sm mb16">'+
     '<div class="stb"><div class="stb-n" style="color:#3b82f6">'+t+'</div><div class="stb-l">Tanques en Flota</div></div>'+
     '<div class="stb"><div class="stb-n" style="color:#f59e0b">'+i+'</div><div class="stb-l">Inspecciones</div></div>'+
     '<div class="stb"><div class="stb-n" style="color:#ef4444">'+c+'</div><div class="stb-l">Cr\u00edticos</div></div></div>'+
@@ -620,7 +626,7 @@ function renderHome(){
     renderHomeAdmin()+
     (S.auth?'<button class="btn" style="width:100%;margin-bottom:16px" onclick="logout()">Cerrar sesi\u00f3n ('+S.auth+')</button>':'')+
     (i>0?renderHomeLast():'')+
-    '<div class="tc mt16" style="font-size:10px;color:var(--bord)">DESIAHO v1.0 \u00b7 API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div></div></div>';
+    '<div class="tc mt16" style="font-size:10px;color:var(--bord)">SIRESP v1.0 \u00b7 API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div></div></div>';
 }
 function renderHomeModules(){
   return '<div class="mb16"><div class="f ac gap-sm mb8"><span style="font-size:11px;color:var(--mut);font-weight:700;letter-spacing:1px">\uD83D\uDC77 M\u00d3DULOS DE INSPECCI\u00d3N</span>'+(S.auth?'<span class="badge-sm" style="background:#22c55e22;color:#22c55e">\u25cf Sesi\u00f3n activa</span>':'')+'</div><div class="g g2 gap">'+
@@ -694,9 +700,9 @@ function renderLoginFb(){
       (!reg?'<button type="button" style="width:100%;margin-top:9px;background:none;border:0;color:#60a5fa;font-size:12px;font-weight:700;cursor:pointer;padding:4px" onclick="S.fbAuth.mode=\'recover\';S.fbAuth.err=\'\';S.fbAuth.ok=\'\';render()">\uD83D\uDD11 \u00bfOlvidaste tu contrase\u00f1a?</button>':'')+
       '<button class="btn-ghost" style="width:100%;margin-top:10px;padding:9px;text-align:center" onclick="S.fbAuth.mode=(\''+(reg?'login':'register')+'\');S.fbAuth.err=\'\';S.fbAuth.showPass=false;render()">'+(reg?"\u2190 Ya tengo cuenta":"\u26a1 No tengo cuenta, crear una")+'</button>';
   }
-  return '<div class="c" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px"><div style="width:100%;max-width:340px;text-align:center">'+
-    '<div style="font-size:44px;margin-bottom:8px">\u2601\uFE0F</div>'+
-    '<div style="font-size:19px;font-weight:900;color:var(--tx1);margin-bottom:4px">Acceso DESIAHO</div>'+
+  return '<div class="c" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px"><div style="width:100%;max-width:360px;text-align:center">'+
+    '<img class="brand-img only-dark" src="header-dark.png" alt="SIRESP" style="margin-bottom:14px"><img class="brand-img only-light" src="header-light.png" alt="SIRESP" style="margin-bottom:14px">'+
+    '<div style="font-size:19px;font-weight:900;color:var(--tx1);margin-bottom:4px">Acceso SIRESP</div>'+
     '<div style="font-size:12px;color:var(--mut);margin-bottom:20px">'+head+'</div>'+
     '<div class="bc r p16" style="border:1px solid '+(a.err?"#ef4444":"var(--bord)")+';text-align:left">'+form+'</div>'+
     '<button class="btn-ghost mt12" onclick="go(\'home\')">\u2190 Volver</button>'+
@@ -952,7 +958,7 @@ function renderAdmin(){
     ...fleet.filter(t=>!t.last).map(t=>({tank:t.id,msg:"Sin inspecciones",c:"#f59e0b"}))];
   const allNC=insp.flatMap(i=>(i.hallazgos||[]).filter(h=>h.tipo==="NC").map(h=>({...h,tank:i.tag,fecha:i.fecha,inspector:i.auditor,score:i.score})));
   let h='<div><div class="ah"><button class="btn-ghost" onclick="go(\'home\')" style="font-size:14px;font-weight:700">\u2190 Inicio</button>'+
-    '<div class="f1"><div style="font-size:10px;color:var(--bord2);letter-spacing:2px">DESIAHO \u00b7 PANEL ADMINISTRADOR</div><div style="font-size:15px;font-weight:900;color:var(--tx1)">Gesti\u00f3n de Flota de Tanques</div></div>'+
+    '<div class="f1"><div style="font-size:10px;color:var(--bord2);letter-spacing:2px">SIRESP \u00b7 PANEL ADMINISTRADOR</div><div style="font-size:15px;font-weight:900;color:var(--tx1)">Gesti\u00f3n de Flota de Tanques</div></div>'+
     '<button class="btn-ghost" style="background:#22c55e22;border-color:#22c55e44;color:#22c55e;font-weight:700" onclick="showAddTank()">+ Tanque</button>'+
     '<button class="btn-ghost" style="background:#8b5cf622;border-color:#8b5cf644;color:#a78bfa;font-weight:700" onclick="showInsts()" title="Administrar instalaciones">\uD83C\uDFD7 Instalaciones</button>'+
     '<button class="btn-ghost" style="background:#3b82f622;border-color:#3b82f644;color:#60a5fa;font-weight:700" onclick="printFleetReport()" title="Imprimir o guardar el informe de flota en PDF">⎙ Informe de Flota (PDF)</button>'+
@@ -1021,7 +1027,7 @@ function renderAdmin(){
     if(allNC.length>20)h+='<div class="tc" style="font-size:11px;color:var(--mut);padding:8px">y '+(allNC.length-20)+' m\u00e1s \u2014 clic en el tanque para detalle.</div>';
     h+='</div>';
   }
-  h+='<div class="tc" style="font-size:10px;color:var(--bord);padding:8px">DESIAHO \u00b7 Panel Administrador \u00b7 API 650/653 \u00b7 NFPA 11/30 \u00b7 IEC 61511</div></div></div>';
+  h+='<div class="tc" style="font-size:10px;color:var(--bord);padding:8px">SIRESP \u00b7 Panel Administrador \u00b7 API 650/653 \u00b7 NFPA 11/30 \u00b7 IEC 61511</div></div></div>';
   // Add tank modal
   if(a.addTank){
     h+='<div class="mc"><div class="mc-b"><div style="font-size:15px;font-weight:800;color:var(--tx1);margin-bottom:16px">+ Registrar Nuevo Tanque</div>'+
@@ -1185,7 +1191,7 @@ function printReport(insp, tank, modulo){
     if(val==="N/A")return'<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;background:#e2e8f0;color:#94a3b8">N/A</span>';
     return S("Pendiente");
   };
-  let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DESIAHO - Informe PDVSA</title>'+
+  let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SIRESP - Informe PDVSA</title>'+
     '<style>'+
     '*{margin:0;padding:0;box-sizing:border-box}'+
     'body{font-family:"Segoe UI",Arial,sans-serif;color:#1e293b;padding:30px 40px;font-size:12px;line-height:1.5}'+
@@ -1233,7 +1239,7 @@ function printReport(insp, tank, modulo){
     '<!-- PAGE 1: HEADER + EXECUTIVE SUMMARY -->'+
     '<div class="page-header">'+
     '<div class="e">PETR\xd3LEOS DE VENEZUELA S.A. (PDVSA)</div>'+
-    '<div class="s">DESIAHO \u2014 SISTEMA INTEGRAL DE RIESGOS</div>'+
+    '<div class="s">SIRESP \u2014 SISTEMA INTEGRAL DE RIESGOS</div>'+
     '<div class="s">INFORME EJECUTIVO DE INSPECCI\xd3N</div>'+
     '<div class="s">TANQUES ATMOSF\xc9RICOS \u2014 TECHO C\xd3NICO</div>'+
     '<div class="m">'+(modulo||"")+' \u00b7 API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div></div>'+
@@ -1357,9 +1363,9 @@ function printReport(insp, tank, modulo){
     '</ul></div>'+
 
     '<div class="fo">'+
-    '<div>DESIAHO v1.0 \u2014 Sistema Integral de Riesgos \u2014 Seguridad de los Procesos</div>'+
+    '<div>SIRESP v1.0 \u2014 Sistema Integral de Riesgos \u2014 Seguridad de los Procesos</div>'+
     '<div style="margin-top:2px">API 650/653/2000 \u00b7 NFPA 11/30/780 \u00b7 IEC 61511 \u00b7 NACE SP0169</div>'+
-    '<div style="margin-top:10px;font-size:10px">Documento generado por DESIAHO \u2014 Fecha: '+new Date().toISOString().split("T")[0]+'</div>'+
+    '<div style="margin-top:10px;font-size:10px">Documento generado por SIRESP \u2014 Fecha: '+new Date().toISOString().split("T")[0]+'</div>'+
     '<div class="sg"><div>FIRMA DEL INSPECTOR</div><div>FIRMA DEL SUPERVISOR / GERENTE</div></div></div>'+
     '</body></html>';
   w.document.write(html);
@@ -1429,7 +1435,7 @@ function printFleetReport(){
   if(!w){showToast("El navegador bloqueó la ventana de impresión. Permite los pop-ups.","#ef4444");return;}
   var TH=function(h){return'<th style="font-size:8px;color:#475569;letter-spacing:.6px;text-align:left;padding:"5px 6px;border-bottom:1px solid #cbd5e1;background:#f1f5f9">'+h+'</th>';};
   var TD=function(v,c,st){return'<td style="font-size:8.5px;color:'+(c||"#334155")+';padding:"4px 6px";border-bottom:1px solid #e2e8f0;'+(st||"")+'">'+v+'</td>';};
-  var html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>DESIAHO - Informe de Flota</title><style>'+
+  var html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>SIRESP - Informe de Flota</title><style>'+
     '*{margin:0;padding:0;box-sizing:border-box}'+
     'body{font-family:"Segoe UI",Arial,sans-serif;color:#0f172a;padding:0 30px 30px;font-size:11px;line-height:1.45}'+
     '@page{size:A4 portrait;margin:14mm 12mm}'+
@@ -1466,7 +1472,7 @@ function printFleetReport(){
     '.sg>div{text-align:center;padding-top:22px;border-top:1px solid #94a3b8;font-size:9px;color:#475569}'+
     '@media print{body{padding:0}}'+
     '</style></head><body>';
-  html+='<div class="hd"><div style="font-size:22px">⬡</div><div><div class="e">DESIAHO</div><div class="s">SISTEMA INTEGRAL DE RIESGOS — INFORME DE FLOTA DE TANQUES ATMOSFÉRICOS (TECHO CÓNICO)</div></div>'+
+  html+='<div class="hd"><div style="font-size:22px">⬡</div><div><div class="e">SIRESP</div><div class="s">SISTEMA INTEGRAL DE RIESGOS — INFORME DE FLOTA DE TANQUES ATMOSFÉRICOS (TECHO CÓNICO)</div></div>'+
     '<div class="r">Emitido: '+esc(now.toLocaleString("es-ES"))+'<br>'+tanks.length+' tanques · '+inspections.length+' inspecciones<br>'+
     (fechas.length?"Período: "+esc(fechas[0])+" — "+esc(fechas[fechas.length-1]):"Sin inspecciones registradas")+'</div></div>';
   html+='<div class="kpis">'+
@@ -1536,7 +1542,7 @@ function printFleetReport(){
     }
     html+='</div>';
   });
-  html+='<div class="ft2">DESIAHO v1.0 — Sistema Integral de Riesgos — API 650/653/2000 · NFPA 11/30/780 · IEC 61511 · NACE SP0169'+
+  html+='<div class="ft2">SIRESP v1.0 — Sistema Integral de Riesgos — API 650/653/2000 · NFPA 11/30/780 · IEC 61511 · NACE SP0169'+
     '<div class="sg"><div>FIRMA DEL RESPONSABLE DE INSPECCIÓN</div><div>FIRMA DEL SUPERVISOR / GERENTE</div></div></div>';
   html+='</body></html>';
   w.document.write(html);

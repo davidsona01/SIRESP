@@ -1,4 +1,4 @@
-/* DESIAHO v1.0 - Service Worker
+/* SIRESP v1.0 - Service Worker
    Estrategia:
    - Navegación (HTML): network-first con respaldo a caché. Así el usuario
      recibe actualizaciones cuando hay internet y la app sigue abriendo offline.
@@ -6,7 +6,7 @@
    - Todo lo demás (mismo origen, GET): cache-first + revalidación en segundo plano.
 */
 
-const VERSION = "desiaho-v7";
+const VERSION = "desiaho-v8";
 const CACHE = VERSION;
 
 const PRECACHE = [
@@ -15,7 +15,10 @@ const PRECACHE = [
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-maskable-512.png",
   "./apple-touch-icon.png",
+  "./header-light.png",
+  "./header-dark.png",
 ];
 
 self.addEventListener("install", (event) => {
