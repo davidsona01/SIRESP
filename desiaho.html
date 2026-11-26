@@ -405,7 +405,7 @@ async function fbRecover(){
   a.busy=true;a.err="";a.ok="";render();
   try{
     const F=await fbLoad();
-    await F.au.sendPasswordResetEmail(F.auth,a.email,{url:"https://davidsona01.github.io/desiaho/desiaho.html?reset=1"});
+    await F.au.sendPasswordResetEmail(F.auth,a.email,{url:"https://davidsona01.github.io/SIRESP/desiaho.html?reset=1"});
     a.busy=false;
     a.ok="✔ Enlace enviado a "+a.email+". Revisa tu correo (y la carpeta spam).";
     render();
